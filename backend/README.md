@@ -29,6 +29,9 @@ python -m pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
+The legacy `uvicorn app:main.app --reload` target is also supported for
+compatibility.
+
 The health check is available at `http://127.0.0.1:8000/api/v1/health`.
 Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
 
