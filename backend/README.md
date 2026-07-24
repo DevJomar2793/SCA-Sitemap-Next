@@ -35,6 +35,22 @@ compatibility.
 The health check is available at `http://127.0.0.1:8000/api/v1/health`.
 Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
 
+## Admin sitemap CRUD
+
+The API stores sitemap records in `sitemap.db`, created automatically in the
+backend directory when the application starts.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/v1/admin-sitemaps` | Create a record |
+| `GET` | `/api/v1/admin-sitemaps` | List records |
+| `GET` | `/api/v1/admin-sitemaps/{id}` | Read a record |
+| `PATCH` | `/api/v1/admin-sitemaps/{id}` | Partially update a record |
+| `DELETE` | `/api/v1/admin-sitemaps/{id}` | Delete a record |
+
+`created_at` and `updated_at` are managed automatically and must not be included
+in create or update requests.
+
 ## Configuration
 
 The service reads these optional environment variables:

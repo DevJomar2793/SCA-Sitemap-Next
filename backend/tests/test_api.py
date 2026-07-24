@@ -10,7 +10,7 @@ UNCONFIGURED_ORIGIN = "https://example.com"
 
 def create_test_client() -> TestClient:
     settings = Settings(cors_origins=(FRONTEND_ORIGIN,))
-    return TestClient(create_app(settings))
+    return TestClient(create_app(settings, initialize_database=False))
 
 
 def test_health_check() -> None:
@@ -40,6 +40,20 @@ def test_configured_origin_is_allowed() -> None:
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == FRONTEND_ORIGIN
+
+
+def test_crud_methods_are_allowed_for_configured_origin() -> None:
+    with create_test_client() as client:
+        response = client.options(
+            "/api/v1/admin-sitemaps/1",
+            headers={
+                "Origin": FRONTEND_ORIGIN,
+                "Access-Control-Request-Method": "PATCH",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-methods"] == "GET, POST, PATCH, DELETE"
 
 
 def test_unconfigured_origin_is_not_allowed() -> None:
