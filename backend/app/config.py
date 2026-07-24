@@ -15,11 +15,14 @@ class Settings:
     @classmethod
     def from_environment(cls) -> "Settings":
         raw_origins = os.getenv("CORS_ORIGINS")
-        cors_origins = (
-            tuple(origin.strip() for origin in raw_origins.split(",") if origin.strip())
-            if raw_origins is not None
-            else DEFAULT_CORS_ORIGINS
-        )
+        cors_origins = DEFAULT_CORS_ORIGINS
+
+        if raw_origins is not None:
+            cors_origins = tuple(
+                origin.strip()
+                for origin in raw_origins.split(",")
+                if origin.strip()
+            )
 
         return cls(
             app_name=os.getenv("APP_NAME", DEFAULT_APP_NAME),

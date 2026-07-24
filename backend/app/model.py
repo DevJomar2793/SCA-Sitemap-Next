@@ -18,6 +18,8 @@ class AdminSitemap(Base):
     screen_label: Mapped[str] = mapped_column(String, nullable=False)
     notes: Mapped[str] = mapped_column(String, nullable=False)
     page_location: Mapped[str] = mapped_column(String, nullable=False)
+
+    # SQLite sets both dates on create and refreshes updated_at on changes.
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,

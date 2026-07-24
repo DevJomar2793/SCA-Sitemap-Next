@@ -1,22 +1,17 @@
-import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
-# Add backend directory to sys.path if running as script
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
-from app.core.config import Settings
+from app.config import Settings
 from app.database import init_db
 
 
 @asynccontextmanager
 async def database_lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """Create missing database tables when the API starts."""
     init_db()
     yield
 
@@ -47,6 +42,3 @@ def create_app(
 
 
 app = create_app()
-
-if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)

@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from uvicorn.importer import import_from_string
 
-from app.core.config import Settings
+from app.config import Settings
 from app.main import app, create_app
 
 FRONTEND_ORIGIN = "http://localhost:3000"
@@ -45,7 +45,7 @@ def test_configured_origin_is_allowed() -> None:
 def test_crud_methods_are_allowed_for_configured_origin() -> None:
     with create_test_client() as client:
         response = client.options(
-            "/api/v1/admin-sitemaps/1",
+            "/api/v1/update-admin-page/1",
             headers={
                 "Origin": FRONTEND_ORIGIN,
                 "Access-Control-Request-Method": "PATCH",
@@ -69,5 +69,5 @@ def test_unconfigured_origin_is_not_allowed() -> None:
     assert "access-control-allow-origin" not in response.headers
 
 
-def test_legacy_asgi_target_resolves() -> None:
-    assert import_from_string("app:main.app") is app
+def test_standard_asgi_target_resolves() -> None:
+    assert import_from_string("app.main:app") is app

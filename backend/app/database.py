@@ -20,14 +20,16 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 
 
 def init_db() -> None:
+    # Import the model before creating tables so SQLAlchemy knows its structure.
     from app import model  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 
 
 def get_db() -> Generator[Session, None, None]:
-    database = SessionLocal()
+    # FastAPI opens one session per request and always closes it afterward.
+    db = SessionLocal()
     try:
-        yield database
+        yield db
     finally:
-        database.close()
+        db.close()
