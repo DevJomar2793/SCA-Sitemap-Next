@@ -53,7 +53,7 @@ export function SitemapSearchPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#2d78ce] text-white">
+    <main className="relative flex min-h-screen flex-col overflow-hidden bg-[#2d78ce] text-white">
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(111,181,246,0.42),transparent_40%),linear-gradient(145deg,#347fcf_0%,#2c75c9_52%,#2168bc_100%)]"
@@ -90,7 +90,7 @@ export function SitemapSearchPage() {
         </Link>
       </header>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col px-5 pb-16 pt-[8vh] sm:px-8 sm:pt-[12vh] lg:pt-[14vh]">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col px-5 pb-12 pt-[8vh] sm:px-8 sm:pt-[12vh] lg:pt-[14vh]">
         <form
           onSubmit={handleSubmit}
           aria-label="Search sitemap screens"
@@ -179,6 +179,14 @@ export function SitemapSearchPage() {
           <SearchWelcome />
         )}
       </div>
+
+      <footer className="relative z-10 px-5 py-5 text-center text-xs font-medium text-blue-100/85 sm:text-sm">
+        Developed by <span className="font-bold text-white">DevJMR</span>
+        <span className="mx-2 text-blue-200/60" aria-hidden="true">
+          •
+        </span>
+        © {new Date().getFullYear()}
+      </footer>
 
       {results?.length ? (
         <SearchResultsModal
