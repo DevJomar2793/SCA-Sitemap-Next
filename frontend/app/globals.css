@@ -115,6 +115,27 @@ a {
   }
 }
 
+@keyframes search-illustration-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes search-result-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-dialog-backdrop-in {
   animation: dialog-backdrop-in 180ms ease-out both;
 }
@@ -144,18 +165,31 @@ a {
   transform-origin: left;
 }
 
+.search-illustration {
+  animation: search-illustration-float 4s ease-in-out infinite;
+}
+
+.animate-search-result {
+  animation: search-result-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-dialog-backdrop-in,
   .animate-dialog-backdrop-out,
   .animate-dialog-in,
   .animate-dialog-out,
   .animate-toast-in,
-  .animate-toast-out {
+  .animate-toast-out,
+  .animate-search-result {
     animation-duration: 1ms;
   }
 
   .animate-toast-progress {
     animation: none;
     transform: scaleX(0);
+  }
+
+  .search-illustration {
+    animation: none;
   }
 }

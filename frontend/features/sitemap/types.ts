@@ -28,6 +28,13 @@ export type ToastMessage = {
   message: string;
 };
 
+export type SitemapImportResult = {
+  imported_count: number;
+  skipped_count: number;
+  worksheet_count: number;
+  ignored_worksheets: string[];
+};
+
 export const EMPTY_SITEMAP_PAGE: SitemapPageInput = {
   alpha: "",
   screen_number: "",
@@ -76,6 +83,7 @@ export const SITEMAP_PAGE_FIELDS: Array<{
     name: "page_location",
     label: "Navigation instructions",
     placeholder: "e.g. Dashboard → Users → Master List",
+    multiline: true,
   },
   {
     name: "screen_description",

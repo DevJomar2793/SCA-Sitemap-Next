@@ -2,6 +2,7 @@
 
 import {
   Download,
+  FileUp,
   Filter,
   Plus,
   Search,
@@ -29,6 +30,7 @@ type SitemapToolbarProps = {
   onClearFilters: () => void;
   onExport: () => void;
   isExportDisabled: boolean;
+  onImport: () => void;
   onAdd: () => void;
 };
 
@@ -44,6 +46,7 @@ export function SitemapToolbar({
   onClearFilters,
   onExport,
   isExportDisabled,
+  onImport,
   onAdd,
 }: SitemapToolbarProps) {
   return (
@@ -51,7 +54,7 @@ export function SitemapToolbar({
       aria-label="Sitemap controls"
       className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"
     >
-      <label className="relative block w-full xl:max-w-[620px]">
+      <label className="relative block w-full xl:max-w-155">
         <Search
           aria-hidden="true"
           className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500"
@@ -138,6 +141,14 @@ export function SitemapToolbar({
 
         <button
           type="button"
+          onClick={onImport}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          <FileUp className="size-4" />
+          Import
+        </button>
+        <button
+          type="button"
           onClick={onExport}
           disabled={isExportDisabled}
           className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -152,7 +163,7 @@ export function SitemapToolbar({
         >
           <Plus className="size-5" />
           <span className="sm:hidden">Add Page</span>
-          <span className="hidden sm:inline">Add Sitemap Page</span>
+          <span className="hidden sm:inline">Add Screen</span>
         </button>
       </div>
     </section>

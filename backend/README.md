@@ -41,6 +41,7 @@ app/
 ├── database.py       # SQLite connection and sessions
 ├── model.py          # SQLAlchemy database model
 ├── schema.py         # Request and response validation
+├── services/         # Excel parsing and other business logic
 └── main.py           # FastAPI application setup
 ```
 
@@ -54,8 +55,10 @@ backend directory when the application starts.
 | `POST` | `/api/v1/add-admin-page` | Create a page |
 | `GET` | `/api/v1/get-admin-pages` | List all pages |
 | `GET` | `/api/v1/get-admin-pages/{id}` | Read one page |
+| `GET` | `/api/v1/search-sitemap-pages?q={identifier}` | Search by screen identifier |
 | `PATCH` | `/api/v1/update-admin-page/{id}` | Update selected fields |
 | `DELETE` | `/api/v1/delete-admin-page/{id}` | Delete a page |
+| `POST` | `/api/v1/import-sitemap-pages` | Replace pages from an Excel workbook |
 
 `created_at` and `updated_at` are managed automatically and must not be included
 in create or update requests.
@@ -77,6 +80,22 @@ Example create request:
 
 `page_location` contains concise navigation instructions describing how to
 reach the screen. The API field name is retained for compatibility.
+
+## Excel import
+
+Send a multipart form request to `/api/v1/import-sitemap-pages` with the
+workbook in a field named `file`. The importer accepts `.xlsx` files up to
+10 MB and imports at most 10,000 detail rows.
+
+Recognized detail worksheets must place `Alpha` and `Screen Number` in the
+first two columns. Other supported headers include `Screen Type`,
+`Screen Description`, `File Label`, `Screen Label`, `Notes`, and
+`Navigation Instruction` (stored as `page_location`). Summary worksheets are
+ignored, and blank fields in accepted rows are stored as `Not provided`.
+
+After the complete workbook passes validation, the import replaces all
+existing sitemap records in one transaction. A failed import leaves the
+existing records unchanged.
 
 ## Configuration
 

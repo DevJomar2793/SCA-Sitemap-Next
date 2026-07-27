@@ -4,25 +4,25 @@ import { AlertCircle, RotateCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Sidebar } from "@/components/layout/sidebar";
+import { AppFooter } from "@/components/layout/app-footer";
 
 import { useSitemapPages } from "../hooks/use-sitemap-pages";
 import { useSitemapTableState } from "../hooks/use-sitemap-table-state";
 import { useToast } from "../hooks/use-toast";
 import type {
   SitemapFormMode,
+  SitemapImportResult,
   SitemapPage,
   SitemapPageInput,
 } from "../types";
 import { downloadSitemapCsv } from "../utils";
 import { DeleteSitemapDialog } from "./delete-sitemap-dialog";
+import { ImportSitemapDialog } from "./import-sitemap-dialog";
 import { NotificationToast } from "./notification-toast";
 import { SitemapHeader } from "./sitemap-header";
 import { SitemapPageModal } from "./sitemap-page-modal";
 import { SitemapPagination } from "./sitemap-pagination";
-import {
-  SitemapTable,
-  type SitemapRowAction,
-} from "./sitemap-table";
+import { SitemapTable, type SitemapRowAction } from "./sitemap-table";
 import { SitemapToolbar } from "./sitemap-toolbar";
 
 type ModalState = {
@@ -40,6 +40,7 @@ export function SitemapDashboard() {
     createPage,
     updatePage,
     removePage,
+    importWorkbook,
   } = useSitemapPages();
   const table = useSitemapTableState(pages);
   const { toast, isClosing, showToast, dismissToast } = useToast();
@@ -50,6 +51,7 @@ export function SitemapDashboard() {
   const [loadingRecordId, setLoadingRecordId] = useState<number | null>(null);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SitemapPage | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   useEffect(() => {
     function closePopovers(event: MouseEvent) {
@@ -139,6 +141,23 @@ export function SitemapDashboard() {
     });
   }
 
+  async function importPages(file: File): Promise<SitemapImportResult> {
+    const result = await importWorkbook(file);
+    table.clearFilters();
+    setIsFilterOpen(false);
+    showToast({
+      type: "success",
+      message: `Imported ${result.imported_count} sitemap pages from ${
+        result.worksheet_count
+      } worksheets${
+        result.skipped_count > 0
+          ? `; skipped ${result.skipped_count} incomplete rows`
+          : ""
+      }.`,
+    });
+    return result;
+  }
+
   function clearFilters() {
     table.clearFilters();
     setIsFilterOpen(false);
@@ -146,15 +165,12 @@ export function SitemapDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <main className="min-h-screen lg:ml-[270px]">
+      <main className="flex min-h-screen flex-col lg:ml-67.5">
         <SitemapHeader onOpenSidebar={() => setIsSidebarOpen(true)} />
 
-        <div className="mx-auto max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
+        <div className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
           <SitemapToolbar
             query={table.query}
             onQueryChange={table.changeQuery}
@@ -167,6 +183,7 @@ export function SitemapDashboard() {
             onClearFilters={clearFilters}
             onExport={exportPages}
             isExportDisabled={table.filteredPages.length === 0}
+            onImport={() => setIsImportOpen(true)}
             onAdd={() => setModal({ mode: "create" })}
           />
 
@@ -212,6 +229,8 @@ export function SitemapDashboard() {
             ) : null}
           </section>
         </div>
+
+        <AppFooter />
       </main>
 
       {modal ? (
@@ -229,6 +248,14 @@ export function SitemapDashboard() {
           page={deleteTarget}
           onClose={() => setDeleteTarget(null)}
           onConfirm={confirmDelete}
+        />
+      ) : null}
+
+      {isImportOpen ? (
+        <ImportSitemapDialog
+          existingCount={pages.length}
+          onClose={() => setIsImportOpen(false)}
+          onImport={importPages}
         />
       ) : null}
 

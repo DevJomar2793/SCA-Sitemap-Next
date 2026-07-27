@@ -48,3 +48,10 @@ class AdminSitemapRead(AdminSitemapFields):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class SitemapImportRead(BaseModel):
+    imported_count: int
+    skipped_count: int
+    worksheet_count: int
+    ignored_worksheets: list[str]

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SCA Sitemap | Sitemap Pages",
-  description: "Manage and maintain the SCA application sitemap.",
+  title: "SCA Sitemap",
+  description: "Find and manage SCA application sitemap screens.",
 };
 
 export default function RootLayout({

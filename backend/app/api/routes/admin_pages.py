@@ -1,12 +1,35 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy import select
+from pathlib import Path
+import re
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+    status,
+)
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.database import get_db
 from app.model import AdminSitemap
-from app.schema import AdminSitemapCreate, AdminSitemapRead, AdminSitemapUpdate
+from app.schema import (
+    AdminSitemapCreate,
+    AdminSitemapRead,
+    AdminSitemapUpdate,
+    SitemapImportRead,
+)
+from app.services.excel_import import WorkbookImportError, parse_sitemap_workbook
 
 router = APIRouter(tags=["admin pages"])
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+PREFIXED_SCREEN_PATTERN = re.compile(
+    r"^(?P<alpha>[A-Za-z][A-Za-z-]*)[\s_-]+(?P<screen_number>.+)$"
+)
 
 
 def get_sitemap_or_404(id: int, db: Session) -> AdminSitemap:
@@ -44,6 +67,95 @@ def create_admin_page(
 def get_admin_pages(db: Session = Depends(get_db)) -> list[AdminSitemap]:
     statement = select(AdminSitemap).order_by(AdminSitemap.id)
     return list(db.scalars(statement))
+
+
+@router.get(
+    "/search-sitemap-pages",
+    response_model=list[AdminSitemapRead],
+    summary="Search sitemap pages by screen identifier",
+)
+def search_sitemap_pages(
+    q: str = Query(min_length=1),
+    db: Session = Depends(get_db),
+) -> list[AdminSitemap]:
+    identifier = q.strip()
+    if not identifier:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Enter a screen number to search",
+        )
+
+    alpha: str | None = None
+    screen_number = identifier
+    prefixed_identifier = PREFIXED_SCREEN_PATTERN.fullmatch(identifier)
+    if prefixed_identifier:
+        alpha = prefixed_identifier.group("alpha")
+        screen_number = prefixed_identifier.group("screen_number").strip()
+
+    screen_number_condition = (
+        func.lower(AdminSitemap.screen_number) == screen_number.lower()
+    )
+    if screen_number.isdigit():
+        normalized_number = screen_number.lstrip("0") or "0"
+        screen_number_condition = or_(
+            screen_number_condition,
+            func.ltrim(AdminSitemap.screen_number, "0") == normalized_number,
+        )
+
+    conditions = [screen_number_condition]
+    if alpha:
+        conditions.append(func.lower(AdminSitemap.alpha) == alpha.lower())
+
+    statement = select(AdminSitemap).where(*conditions).order_by(AdminSitemap.id)
+    return list(db.scalars(statement))
+
+
+@router.post(
+    "/import-sitemap-pages",
+    response_model=SitemapImportRead,
+    summary="Replace sitemap pages from an Excel workbook",
+)
+async def import_sitemap_pages(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+) -> SitemapImportRead:
+    filename = file.filename or ""
+    if Path(filename).suffix.lower() != ".xlsx":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only .xlsx Excel files are supported",
+        )
+
+    contents = await file.read(MAX_UPLOAD_BYTES + 1)
+    await file.close()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail="The Excel file must be 10 MB or smaller",
+        )
+
+    try:
+        result = await run_in_threadpool(parse_sitemap_workbook, contents)
+    except WorkbookImportError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(error),
+        ) from error
+
+    try:
+        db.execute(delete(AdminSitemap))
+        db.add_all(AdminSitemap(**record) for record in result.records)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    return SitemapImportRead(
+        imported_count=len(result.records),
+        skipped_count=result.skipped_count,
+        worksheet_count=result.worksheet_count,
+        ignored_worksheets=result.ignored_worksheets,
+    )
 
 
 @router.get(

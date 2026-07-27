@@ -1,7 +1,6 @@
 # SCA Sitemap Frontend
 
-Next.js administration dashboard for viewing and maintaining SCA sitemap
-records.
+Next.js screen finder and administration dashboard for SCA sitemap records.
 
 ## Setup
 
@@ -32,8 +31,10 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Features
 
 - Responsive sitemap table and mobile record cards
+- Public screen-number finder with detailed navigation results
 - Search and filters
 - Client-side pagination and CSV export
+- Excel workbook import with drag-and-drop validation
 - Create, view, edit, and delete dialogs
 - Loading, empty, success, and error states
 
@@ -42,11 +43,13 @@ Open [http://localhost:3000](http://localhost:3000).
 ```text
 app/
 ├── layout.tsx                 # Root metadata, fonts, and global styles
-└── page.tsx                   # Renders the sitemap feature
+├── page.tsx                   # Public screen finder at /
+└── dashboard/page.tsx         # Sitemap administration at /dashboard
 components/
 └── layout/
     └── sidebar.tsx            # Shared desktop and mobile navigation
 features/
+├── search/                    # Screen finder UI and read-only results modal
 └── sitemap/
     ├── api.ts                 # Requests to the existing backend endpoints
     ├── types.ts               # Sitemap data types and form field definitions
@@ -60,7 +63,8 @@ The feature follows a simple data flow:
 1. `use-sitemap-pages.ts` loads and updates records through `api.ts`.
 2. `use-sitemap-table-state.ts` derives search, filter, and pagination results.
 3. `sitemap-dashboard.tsx` connects state to the focused UI components.
-4. Form and delete dialogs call dashboard handlers, which update the data hook.
+4. Form, delete, and import dialogs call dashboard handlers, which update the
+   data hook.
 
 ### Where to make common changes
 
@@ -71,6 +75,8 @@ The feature follows a simple data flow:
   `features/sitemap/hooks/use-sitemap-table-state.ts`.
 - Change create/edit form presentation in
   `features/sitemap/components/sitemap-page-modal.tsx`.
+- Change Excel import presentation in
+  `features/sitemap/components/import-sitemap-dialog.tsx`.
 
 The frontend uses sitemap-oriented names even though the existing backend URLs
 still contain `admin-page`. Do not rename those URLs without coordinating a

@@ -27,7 +27,7 @@ type SitemapTableProps = {
 function PlainText({ children }: { children: string }) {
   return (
     <span
-      className="block max-w-[180px] truncate font-medium text-slate-700"
+      className="block max-w-45 truncate font-medium text-slate-700"
       title={children}
     >
       {children}
@@ -37,7 +37,7 @@ function PlainText({ children }: { children: string }) {
 
 function TypeBadge({ type }: { type: string }) {
   return (
-    <span className="inline-flex max-w-[130px] truncate rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700">
+    <span className="inline-flex max-w-32.5 truncate rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700">
       {type}
     </span>
   );
@@ -131,7 +131,7 @@ function EmptyState({
   onAdd: () => void;
 }) {
   return (
-    <div className="flex min-h-[370px] flex-col items-center justify-center px-6 text-center">
+    <div className="flex min-h-92.5 flex-col items-center justify-center px-6 text-center">
       <div className="grid size-14 place-items-center rounded-2xl bg-blue-50 text-blue-600">
         <FileQuestion className="size-7" />
       </div>
@@ -174,16 +174,16 @@ export function SitemapTable({
   return (
     <>
       <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full min-w-[1120px] border-collapse text-left">
+        <table className="w-full min-w-280 border-collapse text-left">
           <thead>
             <tr className="bg-slate-50/85 text-xs font-bold uppercase tracking-[0.04em] text-slate-500">
               <th className="w-14 px-5 py-4">#</th>
               <th className="w-24 px-5 py-4">Alpha</th>
               <th className="w-28 px-5 py-4">Screen #</th>
-              <th className="min-w-[210px] px-5 py-4">Screen Label</th>
-              <th className="min-w-[260px] px-5 py-4">Screen Description</th>
-              <th className="min-w-[150px] px-5 py-4">Notes</th>
-              <th className="min-w-[250px] px-5 py-4">How to Access</th>
+              <th className="min-w-52.5 px-5 py-4">Screen Label</th>
+              <th className="min-w-65 px-5 py-4">Screen Description</th>
+              <th className="min-w-37.5 px-5 py-4">Notes</th>
+              <th className="min-w-62.5 px-5 py-4">How to Access</th>
               <th className="w-20 px-5 py-4 text-center">Actions</th>
             </tr>
           </thead>
@@ -196,49 +196,49 @@ export function SitemapTable({
                   key={page.id}
                   className="border-t border-slate-200 transition hover:bg-blue-50/25"
                 >
-                  <td className="px-5 py-[18px] font-semibold text-slate-500">
+                  <td className="px-5 py-4.5 font-semibold text-slate-500">
                     {startIndex + index + 1}
                   </td>
-                  <td className="px-5 py-[18px] font-bold text-slate-900">
+                  <td className="px-5 py-4.5 font-bold text-slate-900">
                     {page.alpha}
                   </td>
-                  <td className="px-5 py-[18px] font-semibold text-blue-700">
+                  <td className="px-5 py-4.5 font-semibold text-blue-700">
                     {page.screen_number}
                   </td>
-                  <td className="px-5 py-[18px]">
+                  <td className="px-5 py-4.5">
                     <p
-                      className="max-w-[230px] truncate font-bold text-slate-900"
+                      className="max-w-57.5 truncate font-bold text-slate-900"
                       title={page.screen_label}
                     >
                       {page.screen_label}
                     </p>
                     <p
-                      className="mt-1 max-w-[230px] truncate text-xs text-slate-500"
+                      className="mt-1 max-w-57.5 truncate text-xs text-slate-500"
                       title={page.file_label}
                     >
                       {page.file_label}
                     </p>
                   </td>
-                  <td className="px-5 py-[18px]">
+                  <td className="px-5 py-4.5">
                     <p
-                      className="max-w-[300px] truncate font-medium text-slate-700"
+                      className="max-w-75 truncate font-medium text-slate-700"
                       title={page.screen_description}
                     >
                       {page.screen_description}
                     </p>
                   </td>
-                  <td className="px-5 py-[18px]">
+                  <td className="px-5 py-4.5">
                     <PlainText>{page.notes}</PlainText>
                   </td>
-                  <td className="px-5 py-[18px]">
+                  <td className="px-5 py-4.5">
                     <p
-                      className="max-w-[300px] whitespace-normal break-words font-medium leading-5 text-slate-700"
+                      className="max-w-75 whitespace-normal wrap-break-word font-medium leading-5 text-slate-700"
                       title={page.page_location}
                     >
                       {page.page_location}
                     </p>
                   </td>
-                  <td className="px-5 py-[18px]">
+                  <td className="px-5 py-4.5">
                     <div className="flex justify-center">
                       <ActionMenu
                         page={page}
@@ -309,7 +309,7 @@ export function SitemapTable({
                     <dt className="font-semibold uppercase tracking-wide text-slate-400">
                       How to Access
                     </dt>
-                    <dd className="mt-1 break-words font-medium leading-5 text-slate-700">
+                    <dd className="mt-1 wrap-break-word font-medium leading-5 text-slate-700">
                       {page.page_location}
                     </dd>
                   </div>
