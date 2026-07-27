@@ -49,7 +49,7 @@ components/
 └── layout/
     └── sidebar.tsx            # Shared desktop and mobile navigation
 features/
-├── search/                    # Screen finder UI and result cards
+├── search/                    # Screen finder UI and read-only results modal
 └── sitemap/
     ├── api.ts                 # Requests to the existing backend endpoints
     ├── types.ts               # Sitemap data types and form field definitions

@@ -14,7 +14,7 @@ import { useState, type FormEvent } from "react";
 import { searchSitemapPages } from "@/features/sitemap/api";
 import type { SitemapPage } from "@/features/sitemap/types";
 
-import { SearchResultCard } from "./search-result-card";
+import { SearchResultsModal } from "./search-results-modal";
 
 export function SitemapSearchPage() {
   const [query, setQuery] = useState("");
@@ -36,6 +36,7 @@ export function SitemapSearchPage() {
     setIsSearching(true);
     setError("");
     setSubmittedQuery(normalizedQuery);
+    setResults(null);
 
     try {
       setResults(await searchSitemapPages(normalizedQuery));
@@ -74,7 +75,9 @@ export function SitemapSearchPage() {
           <span className="grid size-9 place-items-center rounded-xl border border-white/35 bg-white/12 backdrop-blur">
             <Search className="size-4.5" aria-hidden="true" />
           </span>
-          <span className="text-sm font-bold tracking-wide">SCA Screen Finder</span>
+          <span className="text-sm font-bold tracking-wide">
+            SCA Screen Finder
+          </span>
         </Link>
 
         <Link
@@ -91,14 +94,14 @@ export function SitemapSearchPage() {
         <form
           onSubmit={handleSubmit}
           aria-label="Search sitemap screens"
-          className="mx-auto w-full"
+          className="mx-auto w-full max-w-4xl"
         >
           <label htmlFor="screen-search" className="sr-only">
             Search screen number
           </label>
-          <div className="flex min-h-20 items-center gap-3 rounded-3xl border border-white/70 bg-white px-4 py-3 shadow-[0_26px_70px_rgba(8,48,105,0.28)] sm:min-h-24 sm:gap-5 sm:px-6 lg:min-h-28 lg:px-8">
+          <div className="flex min-h-16 items-center gap-3 rounded-2xl border border-white/70 bg-white px-4 py-2.5 shadow-[0_22px_55px_rgba(8,48,105,0.25)] sm:min-h-20 sm:gap-4 sm:px-5 lg:min-h-22 lg:px-6">
             <Search
-              className="size-6 shrink-0 text-slate-400 sm:size-7"
+              className="size-5 shrink-0 text-slate-400 sm:size-6"
               strokeWidth={2}
               aria-hidden="true"
             />
@@ -114,18 +117,18 @@ export function SitemapSearchPage() {
               }}
               placeholder="Search Screen Number"
               autoComplete="off"
-              className="min-w-0 flex-1 bg-transparent text-lg font-medium text-slate-800 outline-none placeholder:text-slate-400 sm:text-2xl lg:text-3xl"
+              className="min-w-0 flex-1 bg-transparent text-xl font-medium text-slate-800 outline-none placeholder:text-slate-400 sm:text-3xl lg:text-4xl"
             />
             <button
               type="submit"
               disabled={isSearching}
               aria-label="Search"
-              className="grid size-13 shrink-0 place-items-center rounded-full bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-600/25 transition hover:scale-[1.04] hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70 sm:size-15"
+              className="grid size-11 shrink-0 place-items-center rounded-full bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-600/25 transition hover:scale-[1.04] hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70 sm:size-13"
             >
               {isSearching ? (
-                <Loader2 className="size-6 animate-spin" aria-hidden="true" />
+                <Loader2 className="size-5 animate-spin" aria-hidden="true" />
               ) : (
-                <ArrowRight className="size-7" aria-hidden="true" />
+                <ArrowRight className="size-6" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -141,60 +144,49 @@ export function SitemapSearchPage() {
           </div>
         ) : null}
 
-        {results === null && !isSearching ? (
-          <SearchWelcome />
-        ) : (
+        {isSearching ? (
           <section
             aria-live="polite"
             aria-busy={isSearching}
             className="mx-auto mt-10 w-full max-w-4xl"
           >
-            {isSearching ? (
-              <div className="flex items-center justify-center gap-3 py-16 text-blue-50">
-                <Loader2 className="size-5 animate-spin" aria-hidden="true" />
-                <p className="text-sm font-semibold">
-                  Looking for screen {submittedQuery}...
-                </p>
-              </div>
-            ) : results?.length ? (
-              <>
-                <div className="mb-4 flex items-end justify-between gap-4 px-1">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-100">
-                      Search results
-                    </p>
-                    <h1 className="mt-1 text-xl font-bold tracking-tight text-white sm:text-2xl">
-                      {results.length}{" "}
-                      {results.length === 1 ? "screen" : "screens"} found
-                    </h1>
-                  </div>
-                  <p className="text-sm font-medium text-blue-100">
-                    “{submittedQuery}”
-                  </p>
-                </div>
-                <div className="space-y-5">
-                  {results.map((page) => (
-                    <SearchResultCard key={page.id} page={page} />
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="animate-search-result rounded-3xl border border-white/30 bg-white/12 px-6 py-12 text-center shadow-xl backdrop-blur-md">
-                <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-white/15">
-                  <Search className="size-6 text-blue-50" aria-hidden="true" />
-                </div>
-                <h1 className="mt-4 text-xl font-bold text-white">
-                  No matching screen found
-                </h1>
-                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-blue-100">
-                  Check the screen number or try a prefixed identifier such as
-                  A-03.
-                </p>
-              </div>
-            )}
+            <div className="flex items-center justify-center gap-3 py-16 text-blue-50">
+              <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+              <p className="text-sm font-semibold">
+                Looking for screen {submittedQuery}...
+              </p>
+            </div>
           </section>
+        ) : results?.length === 0 ? (
+          <section
+            aria-live="polite"
+            className="mx-auto mt-10 w-full max-w-4xl"
+          >
+            <div className="animate-search-result rounded-3xl border border-white/30 bg-white/12 px-6 py-12 text-center shadow-xl backdrop-blur-md">
+              <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-white/15">
+                <Search className="size-6 text-blue-50" aria-hidden="true" />
+              </div>
+              <h1 className="mt-4 text-xl font-bold text-white">
+                No matching screen found
+              </h1>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-blue-100">
+                Check the screen number or try a prefixed identifier such as
+                A-03.
+              </p>
+            </div>
+          </section>
+        ) : (
+          <SearchWelcome />
         )}
       </div>
+
+      {results?.length ? (
+        <SearchResultsModal
+          query={submittedQuery}
+          results={results}
+          onClose={() => setResults(null)}
+        />
+      ) : null}
     </main>
   );
 }
