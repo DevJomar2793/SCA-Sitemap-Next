@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
+import { AppFooter } from "@/components/layout/app-footer";
 import { searchSitemapPages } from "@/features/sitemap/api";
 import type { SitemapPage } from "@/features/sitemap/types";
 
@@ -180,13 +181,9 @@ export function SitemapSearchPage() {
         )}
       </div>
 
-      <footer className="relative z-10 px-5 py-5 text-center text-xs font-medium text-blue-100/85 sm:text-sm">
-        Developed by <span className="font-bold text-white">DevJMR</span>
-        <span className="mx-2 text-blue-200/60" aria-hidden="true">
-          •
-        </span>
-        © {new Date().getFullYear()}
-      </footer>
+      <div className="relative z-10">
+        <AppFooter variant="brand" />
+      </div>
 
       {results?.length ? (
         <SearchResultsModal

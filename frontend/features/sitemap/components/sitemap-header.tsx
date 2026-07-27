@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Menu, UserRound } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 
 type SitemapHeaderProps = {
   onOpenSidebar: () => void;
@@ -9,7 +9,7 @@ type SitemapHeaderProps = {
 export function SitemapHeader({ onOpenSidebar }: SitemapHeaderProps) {
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex min-h-[104px] max-w-[1800px] items-center justify-between gap-4 px-4 sm:px-7 lg:px-9">
+      <div className="mx-auto flex min-h-26 max-w-[1800px] items-center justify-between gap-4 px-4 sm:px-7 lg:px-9">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
@@ -42,13 +42,13 @@ export function SitemapHeader({ onOpenSidebar }: SitemapHeaderProps) {
               3
             </span>
           </button>
-          <button
+          {/* <button
             type="button"
             className="grid size-10 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100"
             aria-label="User profile"
           >
             <UserRound className="size-5" />
-          </button>
+          </button> */}
         </div>
       </div>
     </header>

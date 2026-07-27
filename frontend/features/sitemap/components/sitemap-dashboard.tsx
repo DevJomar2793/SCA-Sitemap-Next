@@ -4,6 +4,7 @@ import { AlertCircle, RotateCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Sidebar } from "@/components/layout/sidebar";
+import { AppFooter } from "@/components/layout/app-footer";
 
 import { useSitemapPages } from "../hooks/use-sitemap-pages";
 import { useSitemapTableState } from "../hooks/use-sitemap-table-state";
@@ -21,10 +22,7 @@ import { NotificationToast } from "./notification-toast";
 import { SitemapHeader } from "./sitemap-header";
 import { SitemapPageModal } from "./sitemap-page-modal";
 import { SitemapPagination } from "./sitemap-pagination";
-import {
-  SitemapTable,
-  type SitemapRowAction,
-} from "./sitemap-table";
+import { SitemapTable, type SitemapRowAction } from "./sitemap-table";
 import { SitemapToolbar } from "./sitemap-toolbar";
 
 type ModalState = {
@@ -167,15 +165,12 @@ export function SitemapDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <main className="min-h-screen lg:ml-[270px]">
+      <main className="flex min-h-screen flex-col lg:ml-67.5">
         <SitemapHeader onOpenSidebar={() => setIsSidebarOpen(true)} />
 
-        <div className="mx-auto max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
+        <div className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
           <SitemapToolbar
             query={table.query}
             onQueryChange={table.changeQuery}
@@ -234,6 +229,8 @@ export function SitemapDashboard() {
             ) : null}
           </section>
         </div>
+
+        <AppFooter />
       </main>
 
       {modal ? (

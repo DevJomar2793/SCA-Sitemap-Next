@@ -54,7 +54,7 @@ export function SitemapToolbar({
       aria-label="Sitemap controls"
       className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"
     >
-      <label className="relative block w-full xl:max-w-[620px]">
+      <label className="relative block w-full xl:max-w-155">
         <Search
           aria-hidden="true"
           className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500"
