@@ -126,9 +126,7 @@ export function SitemapPageModal({
   return (
     <div
       className={`fixed inset-0 z-70 grid place-items-center overflow-y-auto bg-slate-950/45 p-4 backdrop-blur-[2px] ${
-        isClosing
-          ? "animate-dialog-backdrop-out"
-          : "animate-dialog-backdrop-in"
+        isClosing ? "animate-dialog-backdrop-out" : "animate-dialog-backdrop-in"
       }`}
       onMouseDown={(event) => {
         if (event.currentTarget === event.target && !isSubmitting) {

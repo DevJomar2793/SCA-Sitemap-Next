@@ -150,7 +150,7 @@ function EmptyState({
           className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
           <Plus className="size-4" />
-          Add sitemap page
+          Add Page
         </button>
       ) : null}
     </div>
@@ -181,9 +181,7 @@ export function SitemapTable({
               <th className="w-24 px-5 py-4">Alpha</th>
               <th className="w-28 px-5 py-4">Screen #</th>
               <th className="min-w-[210px] px-5 py-4">Screen Label</th>
-              <th className="min-w-[260px] px-5 py-4">
-                Screen Description
-              </th>
+              <th className="min-w-[260px] px-5 py-4">Screen Description</th>
               <th className="min-w-[150px] px-5 py-4">Notes</th>
               <th className="min-w-[250px] px-5 py-4">How to Access</th>
               <th className="w-20 px-5 py-4 text-center">Actions</th>
