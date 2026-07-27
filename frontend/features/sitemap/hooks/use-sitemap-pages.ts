@@ -6,10 +6,15 @@ import {
   createSitemapPage,
   deleteSitemapPage,
   getSitemapPage,
+  importSitemapWorkbook,
   listSitemapPages,
   updateSitemapPage,
 } from "../api";
-import type { SitemapPage, SitemapPageInput } from "../types";
+import type {
+  SitemapImportResult,
+  SitemapPage,
+  SitemapPageInput,
+} from "../types";
 
 export function useSitemapPages() {
   const [pages, setPages] = useState<SitemapPage[]>([]);
@@ -70,6 +75,12 @@ export function useSitemapPages() {
     setPages((current) => current.filter((page) => page.id !== id));
   }
 
+  async function importWorkbook(file: File): Promise<SitemapImportResult> {
+    const result = await importSitemapWorkbook(file);
+    await loadPages();
+    return result;
+  }
+
   return {
     pages,
     isLoading,
@@ -79,5 +90,6 @@ export function useSitemapPages() {
     createPage,
     updatePage,
     removePage,
+    importWorkbook,
   };
 }

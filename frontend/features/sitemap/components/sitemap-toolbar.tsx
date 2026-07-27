@@ -2,6 +2,7 @@
 
 import {
   Download,
+  FileUp,
   Filter,
   Plus,
   Search,
@@ -29,6 +30,7 @@ type SitemapToolbarProps = {
   onClearFilters: () => void;
   onExport: () => void;
   isExportDisabled: boolean;
+  onImport: () => void;
   onAdd: () => void;
 };
 
@@ -44,6 +46,7 @@ export function SitemapToolbar({
   onClearFilters,
   onExport,
   isExportDisabled,
+  onImport,
   onAdd,
 }: SitemapToolbarProps) {
   return (
@@ -136,6 +139,14 @@ export function SitemapToolbar({
           ) : null}
         </div>
 
+        <button
+          type="button"
+          onClick={onImport}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          <FileUp className="size-4" />
+          Import
+        </button>
         <button
           type="button"
           onClick={onExport}

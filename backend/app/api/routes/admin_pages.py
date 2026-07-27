@@ -1,12 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy import select
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.database import get_db
 from app.model import AdminSitemap
-from app.schema import AdminSitemapCreate, AdminSitemapRead, AdminSitemapUpdate
+from app.schema import (
+    AdminSitemapCreate,
+    AdminSitemapRead,
+    AdminSitemapUpdate,
+    SitemapImportRead,
+)
+from app.services.excel_import import WorkbookImportError, parse_sitemap_workbook
 
 router = APIRouter(tags=["admin pages"])
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
 def get_sitemap_or_404(id: int, db: Session) -> AdminSitemap:
@@ -44,6 +54,54 @@ def create_admin_page(
 def get_admin_pages(db: Session = Depends(get_db)) -> list[AdminSitemap]:
     statement = select(AdminSitemap).order_by(AdminSitemap.id)
     return list(db.scalars(statement))
+
+
+@router.post(
+    "/import-sitemap-pages",
+    response_model=SitemapImportRead,
+    summary="Replace sitemap pages from an Excel workbook",
+)
+async def import_sitemap_pages(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+) -> SitemapImportRead:
+    filename = file.filename or ""
+    if Path(filename).suffix.lower() != ".xlsx":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only .xlsx Excel files are supported",
+        )
+
+    contents = await file.read(MAX_UPLOAD_BYTES + 1)
+    await file.close()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail="The Excel file must be 10 MB or smaller",
+        )
+
+    try:
+        result = await run_in_threadpool(parse_sitemap_workbook, contents)
+    except WorkbookImportError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(error),
+        ) from error
+
+    try:
+        db.execute(delete(AdminSitemap))
+        db.add_all(AdminSitemap(**record) for record in result.records)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    return SitemapImportRead(
+        imported_count=len(result.records),
+        skipped_count=result.skipped_count,
+        worksheet_count=result.worksheet_count,
+        ignored_worksheets=result.ignored_worksheets,
+    )
 
 
 @router.get(

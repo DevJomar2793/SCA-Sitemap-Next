@@ -1,4 +1,8 @@
-import type { SitemapPage, SitemapPageInput } from "./types";
+import type {
+  SitemapImportResult,
+  SitemapPage,
+  SitemapPageInput,
+} from "./types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
@@ -42,6 +46,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
 
+  return readApiResponse<T>(response);
+}
+
+async function readApiResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let payload: unknown;
 
@@ -94,4 +102,17 @@ export function deleteSitemapPage(id: number): Promise<void> {
   return apiRequest<void>(`/delete-admin-page/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function importSitemapWorkbook(
+  file: File,
+): Promise<SitemapImportResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/import-sitemap-pages`, {
+    method: "POST",
+    body: formData,
+  });
+  return readApiResponse<SitemapImportResult>(response);
 }
