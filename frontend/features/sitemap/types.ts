@@ -76,6 +76,7 @@ export const SITEMAP_PAGE_FIELDS: Array<{
     name: "page_location",
     label: "Navigation instructions",
     placeholder: "e.g. Dashboard → Users → Master List",
+    multiline: true,
   },
   {
     name: "screen_description",

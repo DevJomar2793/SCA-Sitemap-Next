@@ -152,7 +152,7 @@ export function SitemapToolbar({
         >
           <Plus className="size-5" />
           <span className="sm:hidden">Add Page</span>
-          <span className="hidden sm:inline">Add Sitemap Page</span>
+          <span className="hidden sm:inline">Add Screen</span>
         </button>
       </div>
     </section>
