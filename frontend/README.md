@@ -1,7 +1,6 @@
 # SCA Sitemap Frontend
 
-Next.js administration dashboard for viewing and maintaining SCA sitemap
-records.
+Next.js screen finder and administration dashboard for SCA sitemap records.
 
 ## Setup
 
@@ -32,6 +31,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Features
 
 - Responsive sitemap table and mobile record cards
+- Public screen-number finder with detailed navigation results
 - Search and filters
 - Client-side pagination and CSV export
 - Excel workbook import with drag-and-drop validation
@@ -43,11 +43,13 @@ Open [http://localhost:3000](http://localhost:3000).
 ```text
 app/
 ├── layout.tsx                 # Root metadata, fonts, and global styles
-└── page.tsx                   # Renders the sitemap feature
+├── page.tsx                   # Public screen finder at /
+└── dashboard/page.tsx         # Sitemap administration at /dashboard
 components/
 └── layout/
     └── sidebar.tsx            # Shared desktop and mobile navigation
 features/
+├── search/                    # Screen finder UI and result cards
 └── sitemap/
     ├── api.ts                 # Requests to the existing backend endpoints
     ├── types.ts               # Sitemap data types and form field definitions

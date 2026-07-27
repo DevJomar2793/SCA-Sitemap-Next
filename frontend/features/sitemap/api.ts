@@ -79,6 +79,12 @@ export function getSitemapPage(id: number): Promise<SitemapPage> {
   return apiRequest<SitemapPage>(`/get-admin-pages/${id}`);
 }
 
+export function searchSitemapPages(query: string): Promise<SitemapPage[]> {
+  return apiRequest<SitemapPage[]>(
+    `/search-sitemap-pages?q=${encodeURIComponent(query)}`,
+  );
+}
+
 export function createSitemapPage(
   payload: SitemapPageInput,
 ): Promise<SitemapPage> {

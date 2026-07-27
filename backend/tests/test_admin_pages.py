@@ -14,6 +14,7 @@ LIST_PATH = "/api/v1/get-admin-pages"
 READ_PATH = "/api/v1/get-admin-pages/{id}"
 UPDATE_PATH = "/api/v1/update-admin-page/{id}"
 DELETE_PATH = "/api/v1/delete-admin-page/{id}"
+SEARCH_PATH = "/api/v1/search-sitemap-pages"
 
 VALID_PAYLOAD = {
     "alpha": "A",
@@ -163,6 +164,81 @@ def test_missing_records_return_404(client: TestClient) -> None:
         == 404
     )
     assert client.delete(DELETE_PATH.format(id=999)).status_code == 404
+
+
+def test_search_by_screen_number_returns_all_alpha_matches(
+    client: TestClient,
+) -> None:
+    second_payload = {
+        **VALID_PAYLOAD,
+        "alpha": "B",
+        "screen_label": "Second matching page",
+    }
+    unmatched_payload = {
+        **VALID_PAYLOAD,
+        "screen_number": "002",
+        "screen_label": "Different page",
+    }
+    for payload in (VALID_PAYLOAD, second_payload, unmatched_payload):
+        assert client.post(CREATE_PATH, json=payload).status_code == 201
+
+    response = client.get(SEARCH_PATH, params={"q": "001"})
+
+    assert response.status_code == 200
+    assert [record["alpha"] for record in response.json()] == ["A", "B"]
+
+
+@pytest.mark.parametrize("query", ["a-001", "A 001"])
+def test_search_by_prefixed_identifier_is_case_and_separator_insensitive(
+    client: TestClient,
+    query: str,
+) -> None:
+    assert client.post(CREATE_PATH, json=VALID_PAYLOAD).status_code == 201
+    assert (
+        client.post(
+            CREATE_PATH,
+            json={**VALID_PAYLOAD, "alpha": "B"},
+        ).status_code
+        == 201
+    )
+
+    response = client.get(SEARCH_PATH, params={"q": query})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["alpha"] == "A"
+
+
+def test_search_returns_empty_list_when_no_screen_matches(
+    client: TestClient,
+) -> None:
+    assert client.get(SEARCH_PATH, params={"q": "999"}).json() == []
+
+
+@pytest.mark.parametrize("query", ["03", "A-03"])
+def test_search_treats_leading_zeroes_as_equivalent(
+    client: TestClient,
+    query: str,
+) -> None:
+    assert (
+        client.post(
+            CREATE_PATH,
+            json={**VALID_PAYLOAD, "screen_number": "3"},
+        ).status_code
+        == 201
+    )
+
+    response = client.get(SEARCH_PATH, params={"q": query})
+
+    assert response.status_code == 200
+    assert response.json()[0]["screen_number"] == "3"
+
+
+@pytest.mark.parametrize("query", ["", "   "])
+def test_search_rejects_blank_queries(client: TestClient, query: str) -> None:
+    response = client.get(SEARCH_PATH, params={"q": query})
+
+    assert response.status_code == 422
 
 
 @pytest.mark.parametrize(

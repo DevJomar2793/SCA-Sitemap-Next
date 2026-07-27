@@ -55,6 +55,7 @@ backend directory when the application starts.
 | `POST` | `/api/v1/add-admin-page` | Create a page |
 | `GET` | `/api/v1/get-admin-pages` | List all pages |
 | `GET` | `/api/v1/get-admin-pages/{id}` | Read one page |
+| `GET` | `/api/v1/search-sitemap-pages?q={identifier}` | Search by screen identifier |
 | `PATCH` | `/api/v1/update-admin-page/{id}` | Update selected fields |
 | `DELETE` | `/api/v1/delete-admin-page/{id}` | Delete a page |
 | `POST` | `/api/v1/import-sitemap-pages` | Replace pages from an Excel workbook |
