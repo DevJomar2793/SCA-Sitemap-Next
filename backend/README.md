@@ -32,6 +32,52 @@ uvicorn app.main:app --reload
 The health check is available at `http://127.0.0.1:8000/api/v1/health`.
 Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
 
+## Project structure
+
+```text
+app/
+├── api/routes/       # HTTP endpoints
+├── config.py         # Environment settings
+├── database.py       # SQLite connection and sessions
+├── model.py          # SQLAlchemy database model
+├── schema.py         # Request and response validation
+└── main.py           # FastAPI application setup
+```
+
+## Admin page CRUD
+
+The API stores sitemap records in `sitemap.db`, created automatically in the
+backend directory when the application starts.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/v1/add-admin-page` | Create a page |
+| `GET` | `/api/v1/get-admin-pages` | List all pages |
+| `GET` | `/api/v1/get-admin-pages/{id}` | Read one page |
+| `PATCH` | `/api/v1/update-admin-page/{id}` | Update selected fields |
+| `DELETE` | `/api/v1/delete-admin-page/{id}` | Delete a page |
+
+`created_at` and `updated_at` are managed automatically and must not be included
+in create or update requests.
+
+Example create request:
+
+```json
+{
+  "alpha": "A",
+  "screen_number": "001",
+  "screen_type": "Landing",
+  "screen_description": "Main landing screen",
+  "file_label": "landing.tsx",
+  "screen_label": "Landing page",
+  "notes": "Initial version",
+  "page_location": "Dashboard → Users → Master List"
+}
+```
+
+`page_location` contains concise navigation instructions describing how to
+reach the screen. The API field name is retained for compatibility.
+
 ## Configuration
 
 The service reads these optional environment variables:

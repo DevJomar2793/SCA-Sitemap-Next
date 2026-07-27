@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f9fc;
+  --foreground: #111827;
+  --brand: #2375dc;
+  --brand-dark: #1959b5;
+  --line: #e2e8f0;
+  --muted: #64748b;
 }
 
 @theme inline {
@@ -12,15 +16,146 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #bfdbfe;
+  color: #172554;
+}
+
+@keyframes dialog-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.animate-dialog-backdrop-in {
+  animation: dialog-backdrop-in 180ms ease-out both;
+}
+
+.animate-dialog-backdrop-out {
+  animation: dialog-backdrop-out 200ms ease-in both;
+}
+
+.animate-dialog-in {
+  animation: dialog-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-dialog-out {
+  animation: dialog-out 180ms ease-in both;
+}
+
+.animate-toast-in {
+  animation: toast-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-toast-out {
+  animation: toast-out 180ms ease-in both;
+}
+
+.animate-toast-progress {
+  animation: toast-progress 3500ms linear forwards;
+  transform-origin: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-dialog-backdrop-in,
+  .animate-dialog-backdrop-out,
+  .animate-dialog-in,
+  .animate-dialog-out,
+  .animate-toast-in,
+  .animate-toast-out {
+    animation-duration: 1ms;
+  }
+
+  .animate-toast-progress {
+    animation: none;
+    transform: scaleX(0);
+  }
 }
