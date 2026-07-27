@@ -71,9 +71,12 @@ Example create request:
   "file_label": "landing.tsx",
   "screen_label": "Landing page",
   "notes": "Initial version",
-  "page_location": "/"
+  "page_location": "Dashboard → Users → Master List"
 }
 ```
+
+`page_location` contains concise navigation instructions describing how to
+reach the screen. The API field name is retained for compatibility.
 
 ## Configuration
 

@@ -7,7 +7,7 @@ from app.database import Base
 
 
 class AdminSitemap(Base):
-    __tablename__ = "admin_sitemap"
+    __tablename__ = "page_list"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     alpha: Mapped[str] = mapped_column(String, nullable=False)
