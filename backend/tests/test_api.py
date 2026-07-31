@@ -40,6 +40,7 @@ def test_configured_origin_is_allowed() -> None:
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == FRONTEND_ORIGIN
+    assert response.headers["access-control-allow-credentials"] == "true"
 
 
 def test_crud_methods_are_allowed_for_configured_origin() -> None:

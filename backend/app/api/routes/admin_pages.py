@@ -23,6 +23,7 @@ from app.schema import (
     AdminSitemapUpdate,
     SitemapImportRead,
 )
+from app.security import get_current_admin, require_trusted_origin
 from app.services.excel_import import WorkbookImportError, parse_sitemap_workbook
 
 router = APIRouter(tags=["admin pages"])
@@ -46,6 +47,10 @@ def get_sitemap_or_404(id: int, db: Session) -> AdminSitemap:
     "/add-admin-page",
     response_model=AdminSitemapRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[
+        Depends(get_current_admin),
+        Depends(require_trusted_origin),
+    ],
     summary="Create an admin page",
 )
 def create_admin_page(
@@ -62,6 +67,7 @@ def create_admin_page(
 @router.get(
     "/get-admin-pages",
     response_model=list[AdminSitemapRead],
+    dependencies=[Depends(get_current_admin)],
     summary="Get all admin pages",
 )
 def get_admin_pages(db: Session = Depends(get_db)) -> list[AdminSitemap]:
@@ -113,6 +119,10 @@ def search_sitemap_pages(
 @router.post(
     "/import-sitemap-pages",
     response_model=SitemapImportRead,
+    dependencies=[
+        Depends(get_current_admin),
+        Depends(require_trusted_origin),
+    ],
     summary="Replace sitemap pages from an Excel workbook",
 )
 async def import_sitemap_pages(
@@ -161,6 +171,7 @@ async def import_sitemap_pages(
 @router.get(
     "/get-admin-pages/{id}",
     response_model=AdminSitemapRead,
+    dependencies=[Depends(get_current_admin)],
     summary="Get one admin page",
 )
 def get_admin_page(
@@ -173,6 +184,10 @@ def get_admin_page(
 @router.patch(
     "/update-admin-page/{id}",
     response_model=AdminSitemapRead,
+    dependencies=[
+        Depends(get_current_admin),
+        Depends(require_trusted_origin),
+    ],
     summary="Update an admin page",
 )
 def update_admin_page(
@@ -193,6 +208,10 @@ def update_admin_page(
 @router.delete(
     "/delete-admin-page/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[
+        Depends(get_current_admin),
+        Depends(require_trusted_origin),
+    ],
     summary="Delete an admin page",
 )
 def delete_admin_page(

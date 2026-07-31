@@ -95,14 +95,14 @@ export function SitemapSearchPage() {
         <form
           onSubmit={handleSubmit}
           aria-label="Search sitemap screens"
-          className="mx-auto w-full max-w-4xl"
+          className="mx-auto w-full max-w-3xl"
         >
           <label htmlFor="screen-search" className="sr-only">
             Search screen number
           </label>
-          <div className="flex min-h-16 items-center gap-3 rounded-2xl border border-white/70 bg-white px-4 py-2.5 shadow-[0_22px_55px_rgba(8,48,105,0.25)] sm:min-h-20 sm:gap-4 sm:px-5 lg:min-h-22 lg:px-6">
+          <div className="flex min-h-14 items-center gap-3 rounded-2xl border border-white/70 bg-white px-4 py-2 shadow-[0_22px_55px_rgba(8,48,105,0.25)] sm:min-h-16 sm:px-5 lg:min-h-18">
             <Search
-              className="size-5 shrink-0 text-slate-400 sm:size-6"
+              className="size-5 shrink-0 text-slate-400"
               strokeWidth={2}
               aria-hidden="true"
             />
@@ -118,13 +118,13 @@ export function SitemapSearchPage() {
               }}
               placeholder="Search Screen Number"
               autoComplete="off"
-              className="min-w-0 flex-1 bg-transparent text-xl font-medium text-slate-800 outline-none placeholder:text-slate-400 sm:text-3xl lg:text-4xl"
+              className="min-w-0 flex-1 bg-transparent text-lg font-medium text-slate-800 outline-none placeholder:text-slate-400 sm:text-2xl lg:text-3xl"
             />
             <button
               type="submit"
               disabled={isSearching}
               aria-label="Search"
-              className="grid size-11 shrink-0 place-items-center rounded-full bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-600/25 transition hover:scale-[1.04] hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70 sm:size-13"
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-600/25 transition hover:scale-[1.04] hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70 sm:size-12"
             >
               {isSearching ? (
                 <Loader2 className="size-5 animate-spin" aria-hidden="true" />
