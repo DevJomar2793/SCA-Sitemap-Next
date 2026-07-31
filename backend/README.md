@@ -42,11 +42,10 @@ python -m pip install -r requirements-dev.txt
 ## Run the API
 
 ```bash
-set -a
-source .env
-set +a
 uvicorn app.main:app --reload
 ```
+
+The backend loads `backend/.env` automatically at startup.
 
 The health check is available at `http://127.0.0.1:8000/api/v1/health`.
 Interactive API documentation is available at `http://127.0.0.1:8000/docs`.

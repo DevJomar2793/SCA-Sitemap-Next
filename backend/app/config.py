@@ -1,10 +1,15 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 DEFAULT_APP_NAME = "SCA Sitemap API"
 DEFAULT_APP_VERSION = "0.1.0"
 DEFAULT_CORS_ORIGINS = ("http://localhost:3000",)
 DEFAULT_AUTH_SESSION_MINUTES = 30
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def parse_boolean(value: str | None, *, default: bool = False) -> bool:
