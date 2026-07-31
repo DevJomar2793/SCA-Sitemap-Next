@@ -22,7 +22,7 @@ export function NotificationToast({
       key={toast.id}
       role={isSuccess ? "status" : "alert"}
       aria-live={isSuccess ? "polite" : "assertive"}
-      className={`fixed left-4 right-4 top-4 z-100 overflow-hidden rounded-2xl border bg-white shadow-[0_18px_48px_-16px_rgba(15,23,42,0.35)] sm:left-auto sm:right-6 sm:top-6 sm:w-[380px] ${
+      className={`fixed left-4 right-4 top-4 z-100 overflow-hidden rounded-2xl border bg-white shadow-[0_18px_48px_-16px_rgba(15,23,42,0.35)] sm:left-auto sm:right-6 sm:top-6 sm:w-95 ${
         isClosing ? "animate-toast-out" : "animate-toast-in"
       } ${isSuccess ? "border-emerald-200/90" : "border-red-200/90"}`}
     >

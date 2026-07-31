@@ -17,6 +17,22 @@ Install runtime dependencies:
 python -m pip install -r requirements.txt
 ```
 
+Create the local environment configuration:
+
+```bash
+cp .env.example .env
+```
+
+Replace `AUTH_SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME`
+with real values. Generate a secret with:
+
+```bash
+openssl rand -hex 32
+```
+
+The first startup creates the administrator if the `admin_users` table is
+empty. Later changes to the bootstrap variables do not overwrite that account.
+
 For local development and tests, install the development dependencies instead:
 
 ```bash
@@ -26,6 +42,9 @@ python -m pip install -r requirements-dev.txt
 ## Run the API
 
 ```bash
+set -a
+source .env
+set +a
 uvicorn app.main:app --reload
 ```
 
@@ -55,10 +74,13 @@ backend directory when the application starts.
 | `POST` | `/api/v1/add-admin-page` | Create a page |
 | `GET` | `/api/v1/get-admin-pages` | List all pages |
 | `GET` | `/api/v1/get-admin-pages/{id}` | Read one page |
-| `GET` | `/api/v1/search-sitemap-pages?q={identifier}` | Search by screen identifier |
 | `PATCH` | `/api/v1/update-admin-page/{id}` | Update selected fields |
 | `DELETE` | `/api/v1/delete-admin-page/{id}` | Delete a page |
 | `POST` | `/api/v1/import-sitemap-pages` | Replace pages from an Excel workbook |
+
+These dashboard endpoints require an authenticated administrator. The public
+`GET /api/v1/search-sitemap-pages?q={identifier}` endpoint remains available
+without login.
 
 `created_at` and `updated_at` are managed automatically and must not be included
 in create or update requests.
@@ -109,6 +131,63 @@ The service reads these optional environment variables:
 
 Set `CORS_ORIGINS` to a comma-separated list when multiple browser origins are
 required.
+
+## Administrator authentication
+
+Log in with the bootstrapped administrator:
+
+```bash
+curl -c cookies.txt \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"your-password"}' \
+  http://localhost:8000/api/v1/auth/login
+```
+
+The login response sets a 30-minute `sca_session` HTTP-only cookie. Use the
+cookie for authenticated requests:
+
+```bash
+curl -b cookies.txt http://localhost:8000/api/v1/auth/me
+curl -b cookies.txt http://localhost:8000/api/v1/get-admin-pages
+```
+
+An authenticated administrator can register another full administrator:
+
+```bash
+curl -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email":"second.admin@example.com",
+    "full_name":"Second Administrator",
+    "password":"another-secure-password"
+  }' \
+  http://localhost:8000/api/v1/auth/register
+```
+
+Registration returns the new account without changing the creator's session.
+Emails are case-insensitive, passwords must contain 12–128 characters, and an
+existing email returns `409 Conflict`.
+
+Log out when finished:
+
+```bash
+curl -b cookies.txt -X POST http://localhost:8000/api/v1/auth/logout
+```
+
+Browser clients must send credentials with API requests. Use the same hostname
+for both services during local development, such as `localhost:3000` and
+`localhost:8000`, so the `SameSite=Lax` cookie is sent correctly.
+
+Authentication configuration:
+
+| Variable | Default |
+| --- | --- |
+| `AUTH_SECRET_KEY` | Required; at least 32 characters |
+| `AUTH_COOKIE_SECURE` | `false`; set to `true` behind HTTPS |
+| `AUTH_SESSION_MINUTES` | `30` |
+| `ADMIN_EMAIL` | Required when creating the first administrator |
+| `ADMIN_PASSWORD` | Required when creating the first administrator; 12–128 characters |
+| `ADMIN_NAME` | Required when creating the first administrator |
 
 ## Tests
 

@@ -9,6 +9,13 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.config import Settings
 from app.database import Base, get_db
 from app.main import create_app
+from app.model import AdminUser
+from app.security import hash_password
+
+TEST_ADMIN_EMAIL = "admin@example.com"
+TEST_ADMIN_NAME = "Test Administrator"
+TEST_ADMIN_PASSWORD = "correct-horse-battery-staple"
+TEST_AUTH_SECRET = "test-auth-secret-that-is-at-least-32-characters"
 
 
 @pytest.fixture
@@ -25,6 +32,15 @@ def client(tmp_path: Path) -> Generator[TestClient, None, None]:
         expire_on_commit=False,
     )
     Base.metadata.create_all(bind=test_engine)
+    with TestSessionLocal() as db:
+        db.add(
+            AdminUser(
+                email=TEST_ADMIN_EMAIL,
+                full_name=TEST_ADMIN_NAME,
+                password_hash=hash_password(TEST_ADMIN_PASSWORD),
+            )
+        )
+        db.commit()
 
     def override_get_db() -> Generator[Session, None, None]:
         db = TestSessionLocal()
@@ -33,10 +49,21 @@ def client(tmp_path: Path) -> Generator[TestClient, None, None]:
         finally:
             db.close()
 
-    application = create_app(Settings(), initialize_database=False)
+    application = create_app(
+        Settings(auth_secret_key=TEST_AUTH_SECRET),
+        initialize_database=False,
+    )
     application.dependency_overrides[get_db] = override_get_db
 
     with TestClient(application) as test_client:
+        login_response = test_client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": TEST_ADMIN_EMAIL,
+                "password": TEST_ADMIN_PASSWORD,
+            },
+        )
+        assert login_response.status_code == 200
         yield test_client
 
     application.dependency_overrides.clear()
