@@ -150,11 +150,10 @@ curl -b cookies.txt http://localhost:8000/api/v1/auth/me
 curl -b cookies.txt http://localhost:8000/api/v1/get-admin-pages
 ```
 
-An authenticated administrator can register another full administrator:
+Anyone can register a full administrator account:
 
 ```bash
-curl -b cookies.txt \
-  -H "Content-Type: application/json" \
+curl -H "Content-Type: application/json" \
   -d '{
     "email":"second.admin@example.com",
     "full_name":"Second Administrator",
@@ -163,9 +162,13 @@ curl -b cookies.txt \
   http://localhost:8000/api/v1/auth/register
 ```
 
-Registration returns the new account without changing the creator's session.
-Emails are case-insensitive, passwords must contain 12–128 characters, and an
-existing email returns `409 Conflict`.
+Registration returns an active account but does not create a session. Browser
+clients register and then log in to receive the session cookie. Emails are
+case-insensitive, passwords must contain 12–128 characters, and an existing
+email returns `409 Conflict`.
+
+> Registration is public by design. Every successful registration receives full
+> administrator access to dashboard endpoints.
 
 Log out when finished:
 

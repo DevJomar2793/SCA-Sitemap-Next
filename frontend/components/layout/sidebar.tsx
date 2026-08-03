@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import type { AdminUser } from "@/features/sitemap/api";
+import type { AdminUser } from "@/features/auth/types";
 
 type SidebarProps = {
   isOpen: boolean;

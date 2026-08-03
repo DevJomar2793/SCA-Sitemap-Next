@@ -16,7 +16,7 @@ Copy the example environment file if the API uses a different host:
 cp .env.example .env.local
 ```
 
-The default API URL is `http://127.0.0.1:8000/api/v1`.
+The default API URL is `http://localhost:8000/api/v1`.
 
 ## Run locally
 
@@ -37,6 +37,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - Excel workbook import with drag-and-drop validation
 - Create, view, edit, and delete dialogs
 - Loading, empty, success, and error states
+- Administrator login, public registration, protected dashboard access, and sign out
 
 ## Project map
 
@@ -44,14 +45,17 @@ Open [http://localhost:3000](http://localhost:3000).
 app/
 ├── layout.tsx                 # Root metadata, fonts, and global styles
 ├── page.tsx                   # Public screen finder at /
-└── dashboard/page.tsx         # Sitemap administration at /dashboard
+├── login/page.tsx             # Administrator sign-in at /login
+├── register/page.tsx          # Public administrator registration at /register
+└── dashboard/page.tsx         # Protected sitemap administration at /dashboard
 components/
 └── layout/
     └── sidebar.tsx            # Shared desktop and mobile navigation
 features/
+├── auth/                      # Authentication API, types, hooks, and forms
 ├── search/                    # Screen finder UI and read-only results modal
 └── sitemap/
-    ├── api.ts                 # Requests to the existing backend endpoints
+    ├── api.ts                 # Sitemap-only requests to backend endpoints
     ├── types.ts               # Sitemap data types and form field definitions
     ├── utils.ts               # Pagination and CSV helpers
     ├── hooks/                 # Data, table, toast, and dialog state
@@ -66,9 +70,15 @@ The feature follows a simple data flow:
 4. Form, delete, and import dialogs call dashboard handlers, which update the
    data hook.
 
+Authentication follows the same feature ownership: `features/auth/api.ts`
+contains session requests, `features/auth/types.ts` owns account data, and the
+dashboard gate checks the current session before rendering protected content.
+
 ### Where to make common changes
 
-- Change API calls in `features/sitemap/api.ts`.
+- Change shared request behavior in `lib/api-client.ts`.
+- Change account/session calls in `features/auth/api.ts`.
+- Change sitemap calls in `features/sitemap/api.ts`.
 - Change fields or TypeScript models in `features/sitemap/types.ts`.
 - Change table columns in `features/sitemap/components/sitemap-table.tsx`.
 - Change search, filtering, or pagination in

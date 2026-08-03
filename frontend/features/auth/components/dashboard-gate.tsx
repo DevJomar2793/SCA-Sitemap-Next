@@ -4,12 +4,10 @@ import { AlertCircle, Loader2, RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import {
-  ApiRequestError,
-  getCurrentAdmin,
-  type AdminUser,
-} from "@/features/sitemap/api";
+import { getCurrentAdmin } from "@/features/auth/api";
+import type { AdminUser } from "@/features/auth/types";
 import { SitemapDashboard } from "@/features/sitemap/components/sitemap-dashboard";
+import { ApiRequestError } from "@/lib/api-client";
 
 export function DashboardGate() {
   const router = useRouter();

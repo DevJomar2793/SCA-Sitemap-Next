@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import Settings
@@ -14,10 +12,9 @@ from app.security import (
     create_session_token,
     get_current_admin,
     get_settings,
-    hash_password,
-    normalize_email,
     require_trusted_origin,
 )
+from app.services.admin_users import DuplicateAdminEmailError, register_admin
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -72,27 +69,10 @@ def register(
     payload: AdminRegister,
     db: Session = Depends(get_db),
 ) -> AdminUser:
-    email = normalize_email(str(payload.email))
-    existing_admin = db.scalar(
-        select(AdminUser).where(func.lower(AdminUser.email) == email)
-    )
-    if existing_admin is not None:
-        raise duplicate_email_error()
-
-    admin = AdminUser(
-        email=email,
-        full_name=payload.full_name,
-        password_hash=hash_password(payload.password),
-    )
-    db.add(admin)
     try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
+        return register_admin(db, payload)
+    except DuplicateAdminEmailError:
         raise duplicate_email_error() from None
-
-    db.refresh(admin)
-    return admin
 
 
 @router.get(

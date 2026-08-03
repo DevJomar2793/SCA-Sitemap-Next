@@ -1,11 +1,13 @@
 "use client";
 
 import { AlertCircle, RotateCw } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { AppFooter } from "@/components/layout/app-footer";
-import { logout, type AdminUser } from "@/features/sitemap/api";
+import { logout } from "@/features/auth/api";
+import type { AdminUser } from "@/features/auth/types";
 
 import { useSitemapPages } from "../hooks/use-sitemap-pages";
 import { useSitemapTableState } from "../hooks/use-sitemap-table-state";
@@ -36,6 +38,7 @@ type SitemapDashboardProps = {
 };
 
 export function SitemapDashboard({ admin }: SitemapDashboardProps) {
+  const router = useRouter();
   const {
     pages,
     isLoading,
@@ -170,7 +173,7 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
 
   async function handleLogout() {
     await logout();
-    window.location.replace("/login");
+    router.replace("/login");
   }
 
   return (
