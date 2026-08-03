@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { SitemapDashboard } from "@/features/sitemap/components/sitemap-dashboard";
+import { DashboardGate } from "@/features/auth/components/dashboard-gate";
 
 export const metadata: Metadata = {
   title: "Sitemap Dashboard | SCA Sitemap",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardPage() {
-  return <SitemapDashboard />;
+  return <DashboardGate />;
 }

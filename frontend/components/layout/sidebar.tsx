@@ -2,18 +2,23 @@
 
 import {
   BarChart3,
-  ChevronDown,
   CircleGauge,
   FileClock,
   FolderTree,
+  LogOut,
   Map,
   Settings,
   X,
 } from "lucide-react";
+import { useState } from "react";
+
+import type { AdminUser } from "@/features/sitemap/api";
 
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
+  admin: AdminUser;
+  onLogout: () => Promise<void>;
 };
 
 const secondaryNavigation = [
@@ -22,7 +27,42 @@ const secondaryNavigation = [
   { label: "Settings", icon: Settings },
 ];
 
-function SidebarContent({ onClose }: { onClose?: () => void }) {
+function getInitials(fullName: string) {
+  return fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((name) => name[0])
+    .join("")
+    .toUpperCase();
+}
+
+function SidebarContent({
+  admin,
+  onClose,
+  onLogout,
+}: {
+  admin: AdminUser;
+  onClose?: () => void;
+  onLogout: () => Promise<void>;
+}) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+
+  async function handleLogout() {
+    setLogoutError("");
+    setIsLoggingOut(true);
+
+    try {
+      await onLogout();
+    } catch (error) {
+      setLogoutError(
+        error instanceof Error ? error.message : "Unable to sign out.",
+      );
+      setIsLoggingOut(false);
+    }
+  }
+
   return (
     <>
       <div className="flex h-29 items-center justify-between px-7">
@@ -93,31 +133,41 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <div className="m-4 rounded-2xl bg-blue-900/20 p-3 shadow-inner shadow-blue-950/10">
         <button
           type="button"
-          className="flex w-full items-center gap-3 rounded-xl p-1 text-left"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+          className="flex w-full items-center gap-3 rounded-xl p-1 text-left transition hover:bg-white/10 disabled:cursor-wait disabled:opacity-70"
+          aria-label="Sign out"
         >
           <div className="grid size-11 shrink-0 place-items-center rounded-full border-2 border-white bg-blue-100 text-blue-700">
-            <span className="text-sm font-bold">JC</span>
+            <span className="text-sm font-bold">
+              {getInitials(admin.full_name)}
+            </span>
           </div>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold text-white">
-              Jomar Cerrado
+              {admin.full_name}
             </span>
             <span className="mt-0.5 block text-xs text-blue-100">
-              Administrator
+              {admin.email}
             </span>
           </span>
-          <ChevronDown aria-hidden="true" className="size-4 text-blue-100" />
+          <LogOut aria-hidden="true" className="size-4 text-blue-100" />
         </button>
+        {logoutError ? (
+          <p role="alert" className="mt-2 px-1 text-xs leading-5 text-blue-50">
+            {logoutError}
+          </p>
+        ) : null}
       </div>
     </>
   );
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, admin, onLogout }: SidebarProps) {
   return (
     <>
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-67.5 flex-col bg-linear-to-b from-[#2f7fd8] via-[#2874ce] to-[#2269c2] shadow-xl lg:flex">
-        <SidebarContent />
+        <SidebarContent admin={admin} onLogout={onLogout} />
       </aside>
 
       <div
@@ -140,7 +190,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <SidebarContent onClose={onClose} />
+          <SidebarContent admin={admin} onClose={onClose} onLogout={onLogout} />
         </aside>
       </div>
     </>

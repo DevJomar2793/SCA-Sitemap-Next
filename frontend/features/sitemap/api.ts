@@ -4,9 +4,22 @@ import type {
   SitemapPageInput,
 } from "./types";
 
+export type AdminUser = {
+  id: number;
+  email: string;
+  full_name: string;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type AdminLoginInput = {
+  email: string;
+  password: string;
+};
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://127.0.0.1:8000/api/v1";
+  "http://localhost:8000/api/v1";
 
 function getErrorMessage(payload: unknown, fallback: string): string {
   if (!payload || typeof payload !== "object" || !("detail" in payload)) {
@@ -37,9 +50,20 @@ function getErrorMessage(payload: unknown, fallback: string): string {
   return fallback;
 }
 
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...init?.headers,
@@ -59,8 +83,9 @@ async function readApiResponse<T>(response: Response): Promise<T> {
       payload = null;
     }
 
-    throw new Error(
+    throw new ApiRequestError(
       getErrorMessage(payload, `Request failed with status ${response.status}`),
+      response.status,
     );
   }
 
@@ -69,6 +94,21 @@ async function readApiResponse<T>(response: Response): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+export function login(payload: AdminLoginInput): Promise<AdminUser> {
+  return apiRequest<AdminUser>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getCurrentAdmin(signal?: AbortSignal): Promise<AdminUser> {
+  return apiRequest<AdminUser>("/auth/me", { signal });
+}
+
+export function logout(): Promise<void> {
+  return apiRequest<void>("/auth/logout", { method: "POST" });
 }
 
 export function listSitemapPages(signal?: AbortSignal): Promise<SitemapPage[]> {
@@ -119,6 +159,7 @@ export async function importSitemapWorkbook(
   const response = await fetch(`${API_BASE_URL}/import-sitemap-pages`, {
     method: "POST",
     body: formData,
+    credentials: "include",
   });
   return readApiResponse<SitemapImportResult>(response);
 }

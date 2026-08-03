@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { AppFooter } from "@/components/layout/app-footer";
+import { logout, type AdminUser } from "@/features/sitemap/api";
 
 import { useSitemapPages } from "../hooks/use-sitemap-pages";
 import { useSitemapTableState } from "../hooks/use-sitemap-table-state";
@@ -30,7 +31,11 @@ type ModalState = {
   page?: SitemapPage;
 };
 
-export function SitemapDashboard() {
+type SitemapDashboardProps = {
+  admin: AdminUser;
+};
+
+export function SitemapDashboard({ admin }: SitemapDashboardProps) {
   const {
     pages,
     isLoading,
@@ -163,9 +168,19 @@ export function SitemapDashboard() {
     setIsFilterOpen(false);
   }
 
+  async function handleLogout() {
+    await logout();
+    window.location.replace("/login");
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        admin={admin}
+        onLogout={handleLogout}
+      />
 
       <main className="flex min-h-screen flex-col lg:ml-67.5">
         <SitemapHeader onOpenSidebar={() => setIsSidebarOpen(true)} />
