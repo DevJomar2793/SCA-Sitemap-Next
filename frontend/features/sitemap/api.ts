@@ -17,6 +17,10 @@ export type AdminLoginInput = {
   password: string;
 };
 
+export type AdminRegisterInput = AdminLoginInput & {
+  full_name: string;
+};
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:8000/api/v1";
@@ -98,6 +102,13 @@ async function readApiResponse<T>(response: Response): Promise<T> {
 
 export function login(payload: AdminLoginInput): Promise<AdminUser> {
   return apiRequest<AdminUser>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function register(payload: AdminRegisterInput): Promise<AdminUser> {
+  return apiRequest<AdminUser>("/auth/register", {
     method: "POST",
     body: JSON.stringify(payload),
   });

@@ -178,7 +178,9 @@ def test_register_validates_account_fields(
     assert client.post(REGISTER_PATH, json=payload).status_code == 422
 
 
-def test_register_requires_authentication(client: TestClient) -> None:
+def test_public_registration_creates_an_active_administrator(
+    client: TestClient,
+) -> None:
     client.cookies.clear()
 
     response = client.post(
@@ -190,8 +192,10 @@ def test_register_requires_authentication(client: TestClient) -> None:
         },
     )
 
-    assert response.status_code == 401
-    assert response.json() == {"detail": "Not authenticated"}
+    assert response.status_code == 201
+    assert response.json()["email"] == "new@example.com"
+    assert response.json()["full_name"] == "New Administrator"
+    assert response.json()["is_active"] is True
 
 
 @pytest.mark.parametrize(

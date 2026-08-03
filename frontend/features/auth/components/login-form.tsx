@@ -161,6 +161,15 @@ export function LoginForm() {
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">
+          Need an administrator account?{" "}
+          <Link
+            href="/register"
+            className="font-semibold text-blue-700 hover:text-blue-900"
+          >
+            Register
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-slate-500">
           Need to find a screen?{" "}
           <Link href="/" className="font-semibold text-blue-700 hover:text-blue-900">
             Open Screen Finder

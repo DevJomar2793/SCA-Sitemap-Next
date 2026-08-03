@@ -62,15 +62,11 @@ def login(
     response_model=AdminUserRead,
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_401_UNAUTHORIZED: {"description": "Not authenticated"},
         status.HTTP_403_FORBIDDEN: {"description": "Origin is not allowed"},
         status.HTTP_409_CONFLICT: {"description": "Email is already registered"},
     },
-    dependencies=[
-        Depends(get_current_admin),
-        Depends(require_trusted_origin),
-    ],
-    summary="Register an administrator",
+    dependencies=[Depends(require_trusted_origin)],
+    summary="Register a new administrator",
 )
 def register(
     payload: AdminRegister,
