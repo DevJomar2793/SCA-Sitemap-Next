@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { AppFooter } from "@/components/layout/app-footer";
-import { logout } from "@/features/auth/api";
+import { clearStoredAuthenticatedAdmin, logout } from "@/features/auth/api";
 import type { AdminUser } from "@/features/auth/types";
 
 import { useSitemapPages } from "../hooks/use-sitemap-pages";
@@ -173,6 +173,7 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
 
   async function handleLogout() {
     await logout();
+    clearStoredAuthenticatedAdmin();
     router.replace("/login");
   }
 

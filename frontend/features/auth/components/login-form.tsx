@@ -5,14 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { login } from "../api";
-import { useRedirectIfAuthenticated } from "../hooks/use-redirect-if-authenticated";
+import { login, storeAuthenticatedAdmin } from "../api";
 import { AuthFormField } from "./auth-form-field";
-import { AuthPageShell, AuthSessionLoading } from "./auth-page-shell";
+import { AuthPageShell } from "./auth-page-shell";
 
 export function LoginForm() {
   const router = useRouter();
-  const isCheckingSession = useRedirectIfAuthenticated();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,7 +29,8 @@ export function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      await login({ email: normalizedEmail, password });
+      const admin = await login({ email: normalizedEmail, password });
+      storeAuthenticatedAdmin(admin);
       router.replace("/dashboard");
     } catch (loginError) {
       setError(
@@ -44,10 +43,6 @@ export function LoginForm() {
     }
   }
 
-  if (isCheckingSession) {
-    return <AuthSessionLoading />;
-  }
-
   return (
     <AuthPageShell
       title="Administrator sign in"
@@ -55,14 +50,11 @@ export function LoginForm() {
       footer={
         <div className="mt-6 space-y-2 text-center text-sm text-slate-500">
           <p>
-            Need an administrator account?{" "}
-            <Link href="/register" className="font-semibold text-blue-700 hover:text-blue-900">
-              Register
-            </Link>
-          </p>
-          <p>
             Need to find a screen?{" "}
-            <Link href="/" className="font-semibold text-blue-700 hover:text-blue-900">
+            <Link
+              href="/"
+              className="font-semibold text-blue-700 hover:text-blue-900"
+            >
               Open Screen Finder
             </Link>
           </p>
@@ -96,7 +88,10 @@ export function LoginForm() {
         />
 
         {error ? (
-          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm font-medium text-red-700">
+          <p
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm font-medium text-red-700"
+          >
             {error}
           </p>
         ) : null}
@@ -107,7 +102,9 @@ export function LoginForm() {
           className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
-          {!isSubmitting ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
+          {!isSubmitting ? (
+            <ArrowRight className="size-4" aria-hidden="true" />
+          ) : null}
         </button>
       </form>
     </AuthPageShell>

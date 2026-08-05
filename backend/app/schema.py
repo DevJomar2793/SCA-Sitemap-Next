@@ -69,7 +69,7 @@ class AdminRegister(BaseModel):
 
     email: EmailStr
     full_name: str = Field(min_length=1, max_length=120)
-    password: str = Field(min_length=12, max_length=128)
+    password: str = Field(min_length=5, max_length=128)
 
 
 class AdminUserRead(BaseModel):

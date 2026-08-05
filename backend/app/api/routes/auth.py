@@ -10,7 +10,6 @@ from app.security import (
     authenticate_admin,
     authentication_error,
     create_session_token,
-    get_current_admin,
     get_settings,
     require_trusted_origin,
 )
@@ -73,17 +72,6 @@ def register(
         return register_admin(db, payload)
     except DuplicateAdminEmailError:
         raise duplicate_email_error() from None
-
-
-@router.get(
-    "/me",
-    response_model=AdminUserRead,
-    summary="Get the current administrator",
-)
-def read_current_admin(
-    admin: AdminUser = Depends(get_current_admin),
-) -> AdminUser:
-    return admin
 
 
 @router.post(

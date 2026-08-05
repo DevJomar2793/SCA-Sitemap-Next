@@ -5,17 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { login, register } from "../api";
-import { useRedirectIfAuthenticated } from "../hooks/use-redirect-if-authenticated";
+import { login, register, storeAuthenticatedAdmin } from "../api";
 import { AuthFormField } from "./auth-form-field";
-import { AuthPageShell, AuthSessionLoading } from "./auth-page-shell";
+import { AuthPageShell } from "./auth-page-shell";
 
-const MINIMUM_PASSWORD_LENGTH = 12;
+const MINIMUM_PASSWORD_LENGTH = 5;
 const MAXIMUM_PASSWORD_LENGTH = 128;
 
 export function RegisterForm() {
   const router = useRouter();
-  const isCheckingSession = useRedirectIfAuthenticated();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,7 +45,8 @@ export function RegisterForm() {
         email: normalizedEmail,
         password,
       });
-      await login({ email: normalizedEmail, password });
+      const admin = await login({ email: normalizedEmail, password });
+      storeAuthenticatedAdmin(admin);
       router.replace("/dashboard");
     } catch (registrationError) {
       setError(
@@ -60,10 +59,6 @@ export function RegisterForm() {
     }
   }
 
-  if (isCheckingSession) {
-    return <AuthSessionLoading />;
-  }
-
   return (
     <AuthPageShell
       title="Create administrator account"
@@ -71,7 +66,10 @@ export function RegisterForm() {
       footer={
         <p className="mt-6 text-center text-sm text-slate-500">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-blue-700 hover:text-blue-900">
+          <Link
+            href="/login"
+            className="font-semibold text-blue-700 hover:text-blue-900"
+          >
             Sign in
           </Link>
         </p>
@@ -113,7 +111,7 @@ export function RegisterForm() {
           disabled={isSubmitting}
           minLength={MINIMUM_PASSWORD_LENGTH}
           maxLength={MAXIMUM_PASSWORD_LENGTH}
-          hint="Use 12 to 128 characters."
+          hint="Use 5 to 128 characters."
           icon={<LockKeyhole className="size-4.5" aria-hidden="true" />}
         />
         <AuthFormField
@@ -131,7 +129,10 @@ export function RegisterForm() {
         />
 
         {error ? (
-          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm font-medium text-red-700">
+          <p
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm font-medium text-red-700"
+          >
             {error}
           </p>
         ) : null}
@@ -142,7 +143,9 @@ export function RegisterForm() {
           className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
         >
           {isSubmitting ? "Creating account..." : "Create account"}
-          {!isSubmitting ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
+          {!isSubmitting ? (
+            <ArrowRight className="size-4" aria-hidden="true" />
+          ) : null}
         </button>
       </form>
     </AuthPageShell>

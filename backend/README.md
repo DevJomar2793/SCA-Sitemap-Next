@@ -146,7 +146,6 @@ The login response sets a 30-minute `sca_session` HTTP-only cookie. Use the
 cookie for authenticated requests:
 
 ```bash
-curl -b cookies.txt http://localhost:8000/api/v1/auth/me
 curl -b cookies.txt http://localhost:8000/api/v1/get-admin-pages
 ```
 
@@ -164,7 +163,7 @@ curl -H "Content-Type: application/json" \
 
 Registration returns an active account but does not create a session. Browser
 clients register and then log in to receive the session cookie. Emails are
-case-insensitive, passwords must contain 12–128 characters, and an existing
+case-insensitive, passwords must contain 5–128 characters, and an existing
 email returns `409 Conflict`.
 
 > Registration is public by design. Every successful registration receives full
@@ -188,7 +187,7 @@ Authentication configuration:
 | `AUTH_COOKIE_SECURE` | `false`; set to `true` behind HTTPS |
 | `AUTH_SESSION_MINUTES` | `30` |
 | `ADMIN_EMAIL` | Required when creating the first administrator |
-| `ADMIN_PASSWORD` | Required when creating the first administrator; 12–128 characters |
+| `ADMIN_PASSWORD` | Required when creating the first administrator; 5–128 characters |
 | `ADMIN_NAME` | Required when creating the first administrator |
 
 ## Tests

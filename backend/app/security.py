@@ -15,7 +15,7 @@ from app.model import AdminUser
 AUTH_COOKIE_NAME = "sca_session"
 JWT_ALGORITHM = "HS256"
 MINIMUM_SECRET_LENGTH = 32
-MINIMUM_BOOTSTRAP_PASSWORD_LENGTH = 12
+MINIMUM_BOOTSTRAP_PASSWORD_LENGTH = 5
 
 password_hash = PasswordHash.recommended()
 DUMMY_PASSWORD_HASH = password_hash.hash("not-a-real-admin-password")

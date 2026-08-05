@@ -25,7 +25,7 @@ from conftest import (
 
 LOGIN_PATH = "/api/v1/auth/login"
 REGISTER_PATH = "/api/v1/auth/register"
-ME_PATH = "/api/v1/auth/me"
+PROTECTED_PATH = "/api/v1/get-admin-pages"
 LOGOUT_PATH = "/api/v1/auth/logout"
 
 
@@ -60,16 +60,14 @@ def test_login_sets_http_only_session_cookie(client: TestClient) -> None:
     assert "max-age=1800" in cookie
     assert "secure" not in cookie
 
-    me_response = client.get(ME_PATH)
-    assert me_response.status_code == 200
-    assert me_response.json()["email"] == TEST_ADMIN_EMAIL
-    assert "password" not in me_response.text
+    protected_response = client.get(PROTECTED_PATH)
+    assert protected_response.status_code == 200
 
 
 def test_authenticated_admin_can_register_another_admin(
     client: TestClient,
 ) -> None:
-    creator = client.get(ME_PATH).json()
+    creator = client.get(PROTECTED_PATH).json()
     creator_cookie = client.cookies.get(AUTH_COOKIE_NAME)
 
     response = client.post(
@@ -92,7 +90,7 @@ def test_authenticated_admin_can_register_another_admin(
     assert "password" not in response.text
     assert "set-cookie" not in response.headers
     assert client.cookies.get(AUTH_COOKIE_NAME) == creator_cookie
-    assert client.get(ME_PATH).json() == creator
+    assert client.get(PROTECTED_PATH).json() == creator
 
     get_db_override = client.app.dependency_overrides[get_db]
     db_generator = get_db_override()
@@ -138,7 +136,7 @@ def test_register_rejects_duplicate_email_case_insensitively(
     assert response.json() == {
         "detail": "An account with this email already exists"
     }
-    assert client.get(ME_PATH).json()["full_name"] == TEST_ADMIN_NAME
+    assert client.get(PROTECTED_PATH).status_code == 200
 
 
 @pytest.mark.parametrize(
@@ -162,7 +160,7 @@ def test_register_rejects_duplicate_email_case_insensitively(
         {
             "email": "new@example.com",
             "full_name": "New Administrator",
-            "password": "too-short",
+            "password": "four",
         },
         {
             "email": "new@example.com",
@@ -225,7 +223,7 @@ def test_logout_clears_session_cookie(client: TestClient) -> None:
     assert response.status_code == 204
     assert response.content == b""
     assert AUTH_COOKIE_NAME not in client.cookies
-    assert client.get(ME_PATH).status_code == 401
+    assert client.get(PROTECTED_PATH).status_code == 401
 
 
 @pytest.mark.parametrize("token", ["not-a-token", ""])
@@ -237,7 +235,7 @@ def test_invalid_or_missing_session_returns_401(
     if token:
         client.cookies.set(AUTH_COOKIE_NAME, token)
 
-    response = client.get(ME_PATH)
+    response = client.get(PROTECTED_PATH)
 
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
@@ -256,7 +254,7 @@ def test_expired_session_returns_401(client: TestClient) -> None:
     )
     client.cookies.set(AUTH_COOKIE_NAME, token)
 
-    assert client.get(ME_PATH).status_code == 401
+    assert client.get(PROTECTED_PATH).status_code == 401
 
 
 def test_disabled_admin_session_returns_401(client: TestClient) -> None:
@@ -271,7 +269,11 @@ def test_disabled_admin_session_returns_401(client: TestClient) -> None:
     finally:
         db_generator.close()
 
-    assert client.get(ME_PATH).status_code == 401
+    assert client.get(PROTECTED_PATH).status_code == 401
+
+
+def test_current_admin_endpoint_is_removed(client: TestClient) -> None:
+    assert client.get("/api/v1/auth/me").status_code == 404
 
 
 @pytest.mark.parametrize(
@@ -364,10 +366,10 @@ def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
             Settings(
                 auth_secret_key=TEST_AUTH_SECRET,
                 admin_email=TEST_ADMIN_EMAIL,
-                admin_password="too-short",
+                admin_password="four",
                 admin_name=TEST_ADMIN_NAME,
             ),
-            "ADMIN_PASSWORD must be at least 12 characters",
+            "ADMIN_PASSWORD must be at least 5 characters",
         ),
         (
             Settings(

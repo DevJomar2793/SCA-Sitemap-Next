@@ -1,4 +1,4 @@
-import { Map, ShieldCheck } from "lucide-react";
+import { Map } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -47,17 +47,6 @@ export function AuthPageShell({
         {children}
         {footer}
       </section>
-    </main>
-  );
-}
-
-export function AuthSessionLoading() {
-  return (
-    <main className="grid min-h-screen place-items-center bg-[#2d78ce] px-5 text-white">
-      <div className="flex items-center gap-3 text-sm font-semibold text-blue-50">
-        <ShieldCheck className="size-5 animate-pulse" aria-hidden="true" />
-        Checking your session...
-      </div>
     </main>
   );
 }

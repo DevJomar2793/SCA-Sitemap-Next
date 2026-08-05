@@ -84,7 +84,7 @@ def search_sitemap_pages(
     identifier = q.strip()
     if not identifier:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Enter a screen number to search",
         )
 
@@ -115,7 +115,7 @@ async def import_sitemap_pages(
     await file.close()
     if len(contents) > MAX_UPLOAD_BYTES:
         raise HTTPException(
-            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail="The Excel file must be 10 MB or smaller",
         )
 
@@ -123,7 +123,7 @@ async def import_sitemap_pages(
         result = await run_in_threadpool(parse_sitemap_workbook, contents)
     except WorkbookImportError as error:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(error),
         ) from error
 
