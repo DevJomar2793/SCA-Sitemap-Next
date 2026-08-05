@@ -10,15 +10,18 @@ import { SitemapDashboard } from "@/features/sitemap/components/sitemap-dashboar
 
 export function DashboardGate() {
   const router = useRouter();
-  const [admin] = useState<AdminUser | null>(() =>
-    typeof window === "undefined" ? null : getStoredAuthenticatedAdmin(),
-  );
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
 
   useEffect(() => {
-    if (!admin) {
+    const storedAdmin = getStoredAuthenticatedAdmin();
+    if (storedAdmin) {
+      // This browser-only session lookup runs after hydration by design.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAdmin(storedAdmin);
+    } else {
       router.replace("/login");
     }
-  }, [admin, router]);
+  }, [router]);
 
   if (!admin) {
     return (
