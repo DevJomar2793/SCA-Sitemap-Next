@@ -1,10 +1,14 @@
 from collections.abc import Generator
+import os
 from pathlib import Path
 
 from sqlalchemy import Engine, create_engine, inspect
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DATABASE_PATH = Path(__file__).resolve().parent.parent / "sitemap.db"
+DEFAULT_DATABASE_PATH = Path(__file__).resolve().parent.parent / "sitemap.db"
+DATABASE_PATH = Path(
+    os.getenv("DATABASE_PATH", str(DEFAULT_DATABASE_PATH))
+).expanduser()
 DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
 
@@ -71,6 +75,7 @@ def init_db() -> None:
     # Import the model before creating tables so SQLAlchemy knows its structure.
     from app import model  # noqa: F401
 
+    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     migrate_legacy_table(engine)
     Base.metadata.create_all(bind=engine)
 

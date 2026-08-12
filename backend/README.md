@@ -127,6 +127,7 @@ The service reads these optional environment variables:
 | `APP_NAME` | `SCA Sitemap API` |
 | `APP_VERSION` | `0.1.0` |
 | `CORS_ORIGINS` | `http://localhost:3000` |
+| `DATABASE_PATH` | `backend/sitemap.db` |
 
 Set `CORS_ORIGINS` to a comma-separated list when multiple browser origins are
 required.
