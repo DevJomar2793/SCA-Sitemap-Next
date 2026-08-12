@@ -3,7 +3,6 @@
 import {
   ArrowRight,
   CircleAlert,
-  LayoutDashboard,
   Loader2,
   Search,
   Sparkles,
@@ -68,7 +67,7 @@ export function SitemapSearchPage() {
         className="pointer-events-none fixed -right-28 bottom-0 size-112 rounded-full bg-blue-950/15 blur-3xl"
       />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-8 sm:py-7">
+      <header className="relative z-10 mx-auto flex w-full max-w-7xl items-center px-5 py-5 sm:px-8 sm:py-7">
         <Link
           href="/"
           className="flex items-center gap-2.5 rounded-xl text-white transition hover:text-blue-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
@@ -79,15 +78,6 @@ export function SitemapSearchPage() {
           <span className="text-sm font-bold tracking-wide">
             SCA Screen Finder
           </span>
-        </Link>
-
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/12 px-3.5 py-2.5 text-xs font-semibold text-white backdrop-blur transition hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-4 sm:text-sm"
-        >
-          <LayoutDashboard className="size-4" aria-hidden="true" />
-          <span className="hidden xs:inline">Admin dashboard</span>
-          <span className="xs:hidden">Dashboard</span>
         </Link>
       </header>
 

@@ -37,7 +37,7 @@ def login(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> AdminUser:
-    admin = authenticate_admin(str(payload.email), payload.password, db)
+    admin = authenticate_admin(payload.email, payload.password, db)
     if admin is None:
         raise authentication_error("Incorrect email or password")
 

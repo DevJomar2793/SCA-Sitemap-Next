@@ -21,8 +21,6 @@ VALID_PAYLOAD = {
     "screen_number": "001",
     "screen_type": "Landing",
     "screen_description": "Main landing screen",
-    "file_label": "landing.tsx",
-    "screen_label": "Landing page",
     "notes": "Initial version",
     "page_location": "/",
 }
@@ -100,6 +98,8 @@ def test_crud_flow(client: TestClient) -> None:
     created = create_response.json()
     assert created["id"] == 1
     assert created["screen_number"] == "001"
+    assert created["file_label"] == "A-001"
+    assert created["screen_label"] == "A-001-Main landing screen"
     assert created["created_at"] is not None
     assert created["updated_at"] is not None
 
@@ -120,6 +120,8 @@ def test_crud_flow(client: TestClient) -> None:
     updated = update_response.json()
     assert updated["notes"] == "Updated notes"
     assert updated["alpha"] == created["alpha"]
+    assert updated["file_label"] == "A-001"
+    assert updated["screen_label"] == "A-001-Main landing screen"
     assert updated["created_at"] == created["created_at"]
     assert updated["updated_at"] > created["updated_at"]
 
@@ -166,18 +168,74 @@ def test_missing_records_return_404(client: TestClient) -> None:
     assert client.delete(DELETE_PATH.format(id=999)).status_code == 404
 
 
+def test_create_trims_sources_before_generating_labels(client: TestClient) -> None:
+    response = client.post(
+        CREATE_PATH,
+        json={
+            **VALID_PAYLOAD,
+            "alpha": " a ",
+            "screen_number": " 003 ",
+            "screen_description": " Main screen ",
+        },
+    )
+
+    assert response.status_code == 201
+    created = response.json()
+    assert created["alpha"] == "a"
+    assert created["screen_number"] == "003"
+    assert created["file_label"] == "a-003"
+    assert created["screen_label"] == "a-003-Main screen"
+
+
+def test_source_updates_regenerate_both_labels(client: TestClient) -> None:
+    created = client.post(CREATE_PATH, json=VALID_PAYLOAD).json()
+
+    response = client.patch(
+        UPDATE_PATH.format(id=created["id"]),
+        json={
+            "alpha": "MG",
+            "screen_number": "04",
+            "screen_description": "Manager list",
+        },
+    )
+
+    assert response.status_code == 200
+    updated = response.json()
+    assert updated["file_label"] == "MG-04"
+    assert updated["screen_label"] == "MG-04-Manager list"
+
+
+@pytest.mark.parametrize("field", ["file_label", "screen_label"])
+@pytest.mark.parametrize(
+    ("method", "path", "payload"),
+    [
+        ("post", CREATE_PATH, VALID_PAYLOAD),
+        ("patch", UPDATE_PATH.format(id=1), {"notes": "Updated"}),
+    ],
+)
+def test_write_requests_reject_generated_label_fields(
+    client: TestClient,
+    field: str,
+    method: str,
+    path: str,
+    payload: dict[str, str],
+) -> None:
+    response = client.request(method, path, json={**payload, field: "override"})
+
+    assert response.status_code == 422
+    assert "System-generated fields must not be provided" in response.text
+
+
 def test_search_by_screen_number_returns_all_alpha_matches(
     client: TestClient,
 ) -> None:
     second_payload = {
         **VALID_PAYLOAD,
         "alpha": "B",
-        "screen_label": "Second matching page",
     }
     unmatched_payload = {
         **VALID_PAYLOAD,
         "screen_number": "002",
-        "screen_label": "Different page",
     }
     for payload in (VALID_PAYLOAD, second_payload, unmatched_payload):
         assert client.post(CREATE_PATH, json=payload).status_code == 201

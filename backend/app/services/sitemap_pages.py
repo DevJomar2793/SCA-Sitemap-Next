@@ -17,6 +17,17 @@ class SitemapPageNotFoundError(Exception):
     """Raised when a sitemap page does not exist."""
 
 
+def generate_sitemap_labels(
+    alpha: str,
+    screen_number: str,
+    screen_description: str,
+) -> dict[str, str]:
+    """Generate the canonical file and screen labels from their source fields."""
+    file_label = f"{alpha.strip()}-{screen_number.strip()}"
+    screen_label = f"{file_label}-{screen_description.strip()}"
+    return {"file_label": file_label, "screen_label": screen_label}
+
+
 def get_sitemap_page(db: Session, page_id: int) -> AdminSitemap:
     """Return one sitemap page or raise a domain-specific not-found error."""
     sitemap_page = db.get(AdminSitemap, page_id)
@@ -63,7 +74,15 @@ def create_sitemap_page(
     payload: AdminSitemapCreate,
 ) -> AdminSitemap:
     """Create and persist one sitemap page."""
-    sitemap_page = AdminSitemap(**payload.model_dump())
+    values = payload.model_dump()
+    values.update(
+        generate_sitemap_labels(
+            values["alpha"],
+            values["screen_number"],
+            values["screen_description"],
+        )
+    )
+    sitemap_page = AdminSitemap(**values)
     db.add(sitemap_page)
     commit_changes(db)
     db.refresh(sitemap_page)
@@ -79,6 +98,14 @@ def update_sitemap_page(
     sitemap_page = get_sitemap_page(db, page_id)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(sitemap_page, field, value)
+
+    generated_labels = generate_sitemap_labels(
+        sitemap_page.alpha,
+        sitemap_page.screen_number,
+        sitemap_page.screen_description,
+    )
+    sitemap_page.file_label = generated_labels["file_label"]
+    sitemap_page.screen_label = generated_labels["screen_label"]
 
     commit_changes(db)
     db.refresh(sitemap_page)

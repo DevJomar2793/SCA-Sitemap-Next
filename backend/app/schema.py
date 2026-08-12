@@ -1,23 +1,43 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
+GENERATED_LABEL_FIELDS = frozenset({"file_label", "screen_label"})
 
-class AdminSitemapFields(BaseModel):
+
+def reject_generated_label_fields(value: Any) -> Any:
+    if isinstance(value, dict):
+        submitted_fields = GENERATED_LABEL_FIELDS.intersection(value)
+        if submitted_fields:
+            field_names = ", ".join(sorted(submitted_fields))
+            raise ValueError(
+                f"System-generated fields must not be provided: {field_names}"
+            )
+    return value
+
+
+class AdminSitemapWritableFields(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     alpha: str = Field(min_length=1)
     screen_number: str = Field(min_length=1)
     screen_type: str = Field(min_length=1)
     screen_description: str = Field(min_length=1)
-    file_label: str = Field(min_length=1)
-    screen_label: str = Field(min_length=1)
     notes: str = Field(min_length=1)
     page_location: str = Field(min_length=1)
 
 
-class AdminSitemapCreate(AdminSitemapFields):
-    pass
+class AdminSitemapFields(AdminSitemapWritableFields):
+    file_label: str = Field(min_length=1)
+    screen_label: str = Field(min_length=1)
+
+
+class AdminSitemapCreate(AdminSitemapWritableFields):
+    @model_validator(mode="before")
+    @classmethod
+    def reject_generated_labels(cls, value: Any) -> Any:
+        return reject_generated_label_fields(value)
 
 
 class AdminSitemapUpdate(BaseModel):
@@ -27,10 +47,13 @@ class AdminSitemapUpdate(BaseModel):
     screen_number: str | None = Field(default=None, min_length=1)
     screen_type: str | None = Field(default=None, min_length=1)
     screen_description: str | None = Field(default=None, min_length=1)
-    file_label: str | None = Field(default=None, min_length=1)
-    screen_label: str | None = Field(default=None, min_length=1)
     notes: str | None = Field(default=None, min_length=1)
     page_location: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_generated_labels(cls, value: Any) -> Any:
+        return reject_generated_label_fields(value)
 
     @model_validator(mode="after")
     def validate_changes(self) -> "AdminSitemapUpdate":

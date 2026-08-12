@@ -16,7 +16,7 @@ import type {
   SitemapFormMode,
   SitemapImportResult,
   SitemapPage,
-  SitemapPageInput,
+  SitemapPageWriteInput,
 } from "../types";
 import { downloadSitemapCsv } from "../utils";
 import { DeleteSitemapDialog } from "./delete-sitemap-dialog";
@@ -104,7 +104,7 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
     void openRecord(action, page.id);
   }
 
-  async function submitModal(values: SitemapPageInput) {
+  async function submitModal(values: SitemapPageWriteInput) {
     if (!modal) {
       return;
     }

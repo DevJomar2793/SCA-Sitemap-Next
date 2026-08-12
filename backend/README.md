@@ -81,8 +81,11 @@ These dashboard endpoints require an authenticated administrator. The public
 `GET /api/v1/search-sitemap-pages?q={identifier}` endpoint remains available
 without login.
 
-`created_at` and `updated_at` are managed automatically and must not be included
-in create or update requests.
+`file_label`, `screen_label`, `created_at`, and `updated_at` are managed
+automatically and must not be included in create or update requests. File labels
+use `{alpha}-{screen_number}` and screen labels use
+`{file_label}-{screen_description}`. Requests that include either generated
+label receive a `422 Unprocessable Entity` response.
 
 Example create request:
 
@@ -92,8 +95,6 @@ Example create request:
   "screen_number": "001",
   "screen_type": "Landing",
   "screen_description": "Main landing screen",
-  "file_label": "landing.tsx",
-  "screen_label": "Landing page",
   "notes": "Initial version",
   "page_location": "Dashboard → Users → Master List"
 }

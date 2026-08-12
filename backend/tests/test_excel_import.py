@@ -17,8 +17,6 @@ EXISTING_PAYLOAD = {
     "screen_number": "001",
     "screen_type": "Landing",
     "screen_description": "Main landing screen",
-    "file_label": "landing.tsx",
-    "screen_label": "Landing page",
     "notes": "Initial version",
     "page_location": "/",
 }
@@ -111,6 +109,8 @@ def test_import_replaces_existing_pages_and_reports_summary(
     assert records[0]["alpha"] == "A"
     assert records[0]["screen_number"] == "3"
     assert records[0]["screen_type"] == "Not provided"
+    assert records[0]["file_label"] == "A-03 Dashboard"
+    assert records[0]["screen_label"] == "A-03"
     assert records[0]["notes"] == "Not provided"
     assert records[1]["alpha"] == "MG"
     assert records[1]["screen_number"] == "04"
@@ -171,7 +171,10 @@ def test_invalid_workbook_does_not_replace_existing_pages(
 
     assert response.status_code == 422
     assert expected_detail in response.json()["detail"]
-    assert client.get(LIST_PATH).json()[0]["screen_label"] == "Landing page"
+    assert (
+        client.get(LIST_PATH).json()[0]["screen_label"]
+        == "A-001-Main landing screen"
+    )
 
 
 def test_row_limit_failure_preserves_existing_pages(
@@ -190,4 +193,4 @@ def test_row_limit_failure_preserves_existing_pages(
     assert "1-row import limit" in response.json()["detail"]
     records = client.get(LIST_PATH).json()
     assert len(records) == 1
-    assert records[0]["screen_label"] == "Landing page"
+    assert records[0]["screen_label"] == "A-001-Main landing screen"
