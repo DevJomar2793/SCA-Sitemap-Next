@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { login, register, storeAuthenticatedAdmin } from "../api";
+import { login, register, storeAuthenticatedSession } from "../api";
 import { AuthFormField } from "./auth-form-field";
 import { AuthPageShell } from "./auth-page-shell";
 
@@ -45,8 +45,8 @@ export function RegisterForm() {
         email: normalizedEmail,
         password,
       });
-      const admin = await login({ email: normalizedEmail, password });
-      storeAuthenticatedAdmin(admin);
+      const session = await login({ email: normalizedEmail, password });
+      storeAuthenticatedSession(session);
       router.replace("/dashboard");
     } catch (registrationError) {
       setError(

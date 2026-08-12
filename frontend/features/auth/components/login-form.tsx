@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { login, storeAuthenticatedAdmin } from "../api";
+import { login, storeAuthenticatedSession } from "../api";
 import { AuthFormField } from "./auth-form-field";
 import { AuthPageShell } from "./auth-page-shell";
 
-export function LoginForm() {
+export function LoginForm({ sessionExpired = false }: { sessionExpired?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,8 +29,8 @@ export function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const admin = await login({ email: normalizedEmail, password });
-      storeAuthenticatedAdmin(admin);
+      const session = await login({ email: normalizedEmail, password });
+      storeAuthenticatedSession(session);
       router.replace("/dashboard");
     } catch (loginError) {
       setError(
@@ -62,6 +62,14 @@ export function LoginForm() {
       }
     >
       <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+        {sessionExpired ? (
+          <p
+            role="status"
+            className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm font-medium text-amber-800"
+          >
+            Your session expired. Please sign in again.
+          </p>
+        ) : null}
         <AuthFormField
           id="email"
           label="Email address"

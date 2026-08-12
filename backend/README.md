@@ -151,6 +151,18 @@ cookie for authenticated requests:
 curl -b cookies.txt http://localhost:8000/api/v1/get-admin-pages
 ```
 
+Login responses include an `expires_at` UTC timestamp. Browser clients can
+validate an existing cookie and retrieve the same administrator/session data
+with:
+
+```bash
+curl -b cookies.txt http://localhost:8000/api/v1/auth/session
+```
+
+Authentication failures return a machine-readable `detail.code`, including
+`session_expired`, `not_authenticated`, `invalid_session`, `inactive_account`,
+or `incorrect_credentials`.
+
 Anyone can register a full administrator account:
 
 ```bash

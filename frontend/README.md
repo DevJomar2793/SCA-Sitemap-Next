@@ -38,7 +38,8 @@ Open [http://localhost:3000](http://localhost:3000).
 - Excel workbook import with drag-and-drop validation
 - Create, view, edit, and delete dialogs
 - Loading, empty, success, and error states
-- Administrator login, public registration, protected dashboard access, and sign out
+- Administrator login, public registration, protected dashboard access,
+  automatic session-expiry logout, and sign out
 
 ## Project map
 
@@ -75,7 +76,9 @@ The feature follows a simple data flow:
 
 Authentication follows the same feature ownership: `features/auth/api.ts`
 contains session requests, `features/auth/types.ts` owns account data, and the
-dashboard gate checks the current session before rendering protected content.
+dashboard gate verifies the HTTP-only session before rendering protected
+content, schedules expiration, and handles authentication failures from API
+requests.
 
 ### Where to make common changes
 

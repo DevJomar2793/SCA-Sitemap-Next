@@ -1,8 +1,9 @@
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 import jwt
 from fastapi import Depends, HTTPException, Request, status
-from jwt.exceptions import InvalidTokenError
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from pydantic import EmailStr, TypeAdapter, ValidationError
 from pwdlib import PasswordHash
 from sqlalchemy import func, select
@@ -20,6 +21,24 @@ MINIMUM_BOOTSTRAP_PASSWORD_LENGTH = 5
 password_hash = PasswordHash.recommended()
 DUMMY_PASSWORD_HASH = password_hash.hash("not-a-real-admin-password")
 email_adapter = TypeAdapter(EmailStr)
+
+
+@dataclass(frozen=True, slots=True)
+class SessionToken:
+    value: str
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class SessionClaims:
+    admin_id: int
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class AuthenticatedSession:
+    admin: AdminUser
+    expires_at: datetime
 
 
 def get_settings(request: Request) -> Settings:
@@ -49,22 +68,25 @@ def verify_password(password: str, stored_hash: str) -> bool:
     return password_hash.verify(password, stored_hash)
 
 
-def create_session_token(admin: AdminUser, settings: Settings) -> str:
+def create_session_token(admin: AdminUser, settings: Settings) -> SessionToken:
     secret = validate_auth_settings(settings)
-    issued_at = datetime.now(timezone.utc)
+    issued_at = datetime.now(timezone.utc).replace(microsecond=0)
     expires_at = issued_at + timedelta(minutes=settings.auth_session_minutes)
-    return jwt.encode(
-        {
-            "sub": str(admin.id),
-            "iat": issued_at,
-            "exp": expires_at,
-        },
-        secret,
-        algorithm=JWT_ALGORITHM,
+    return SessionToken(
+        value=jwt.encode(
+            {
+                "sub": str(admin.id),
+                "iat": issued_at,
+                "exp": expires_at,
+            },
+            secret,
+            algorithm=JWT_ALGORITHM,
+        ),
+        expires_at=expires_at,
     )
 
 
-def decode_session_token(token: str, settings: Settings) -> int:
+def decode_session_token(token: str, settings: Settings) -> SessionClaims:
     secret = validate_auth_settings(settings)
     payload = jwt.decode(
         token,
@@ -75,7 +97,13 @@ def decode_session_token(token: str, settings: Settings) -> int:
     subject = payload.get("sub")
     if not isinstance(subject, str) or not subject.isdigit():
         raise InvalidTokenError("Invalid subject")
-    return int(subject)
+    expires_at = payload.get("exp")
+    if not isinstance(expires_at, (int, float)):
+        raise InvalidTokenError("Invalid expiration")
+    return SessionClaims(
+        admin_id=int(subject),
+        expires_at=datetime.fromtimestamp(expires_at, timezone.utc),
+    )
 
 
 def authenticate_admin(email: str, password: str, db: Session) -> AdminUser | None:
@@ -141,31 +169,44 @@ def bootstrap_admin(db: Session, settings: Settings) -> AdminUser | None:
     return admin
 
 
-def authentication_error(detail: str = "Not authenticated") -> HTTPException:
+def authentication_error(code: str, message: str) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=detail,
+        detail={"code": code, "message": message},
     )
 
 
-def get_current_admin(
+def get_current_session(
     request: Request,
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
-) -> AdminUser:
+) -> AuthenticatedSession:
     token = request.cookies.get(AUTH_COOKIE_NAME)
     if not token:
-        raise authentication_error()
+        raise authentication_error("not_authenticated", "Not authenticated")
 
     try:
-        admin_id = decode_session_token(token, settings)
+        claims = decode_session_token(token, settings)
+    except ExpiredSignatureError:
+        raise authentication_error(
+            "session_expired",
+            "Your session has expired",
+        ) from None
     except (InvalidTokenError, RuntimeError):
-        raise authentication_error() from None
+        raise authentication_error("invalid_session", "Invalid session") from None
 
-    admin = db.get(AdminUser, admin_id)
-    if admin is None or not admin.is_active:
-        raise authentication_error()
-    return admin
+    admin = db.get(AdminUser, claims.admin_id)
+    if admin is None:
+        raise authentication_error("invalid_session", "Invalid session")
+    if not admin.is_active:
+        raise authentication_error("inactive_account", "Account is inactive")
+    return AuthenticatedSession(admin=admin, expires_at=claims.expires_at)
+
+
+def get_current_admin(
+    session: AuthenticatedSession = Depends(get_current_session),
+) -> AdminUser:
+    return session.admin
 
 
 def require_trusted_origin(

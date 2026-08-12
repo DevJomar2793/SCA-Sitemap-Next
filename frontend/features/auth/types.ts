@@ -6,6 +6,10 @@ export type AdminUser = {
   created_at: string;
 };
 
+export type AdminSession = AdminUser & {
+  expires_at: string;
+};
+
 export type LoginCredentials = {
   email: string;
   password: string;

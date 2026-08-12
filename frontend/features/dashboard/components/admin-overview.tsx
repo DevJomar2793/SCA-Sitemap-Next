@@ -29,24 +29,20 @@ export function AdminOverview({ admin }: { admin: AdminUser }) {
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-blue-600">Welcome back</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-slate-950">
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
               Sitemap at a glance
             </h2>
             <p className="mt-1.5 text-sm leading-6 text-slate-500">
               Review catalogue coverage and recently updated screens.
             </p>
           </div>
-          <Link
-            href="/sitemap"
-            className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:self-auto"
-          >
-            Manage sitemap
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
         </div>
 
         {loadError ? (
-          <DashboardError message={loadError} onRetry={() => void loadPages()} />
+          <DashboardError
+            message={loadError}
+            onRetry={() => void loadPages()}
+          />
         ) : isLoading ? (
           <DashboardSkeleton />
         ) : pages.length === 0 ? (
@@ -131,7 +127,9 @@ function MetricCard({
             {value.toLocaleString()}
           </p>
         </div>
-        <div className={`grid size-11 place-items-center rounded-xl ${metricColors[color]}`}>
+        <div
+          className={`grid size-11 place-items-center rounded-xl ${metricColors[color]}`}
+        >
           <Icon className="size-5" aria-hidden="true" />
         </div>
       </div>
@@ -158,7 +156,10 @@ function BreakdownPanel({
         {items.map((item) => (
           <div key={item.label}>
             <div className="mb-2 flex items-center justify-between gap-4 text-sm">
-              <span className="truncate font-semibold text-slate-700" title={item.label}>
+              <span
+                className="truncate font-semibold text-slate-700"
+                title={item.label}
+              >
                 {item.label}
               </span>
               <span className="shrink-0 font-medium text-slate-500">
@@ -193,9 +194,14 @@ function RecentPages({
       <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
         <div>
           <h3 className="text-lg font-bold text-slate-950">Recently updated</h3>
-          <p className="mt-1 text-sm text-slate-500">The latest five sitemap changes</p>
+          <p className="mt-1 text-sm text-slate-500">
+            The latest five sitemap changes
+          </p>
         </div>
-        <Link href="/sitemap" className="text-sm font-semibold text-blue-700 hover:text-blue-900">
+        <Link
+          href="/sitemap"
+          className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+        >
           View all
         </Link>
       </div>
@@ -210,14 +216,20 @@ function RecentPages({
               <p className="text-xs font-bold uppercase tracking-[0.08em] text-blue-600">
                 {page.alpha}-{page.screen_number}
               </p>
-              <p className="mt-1 truncate text-sm font-semibold text-slate-800" title={page.screen_label}>
+              <p
+                className="mt-1 truncate text-sm font-semibold text-slate-800"
+                title={page.screen_label}
+              >
                 {page.screen_label}
               </p>
             </div>
             <span className="justify-self-start rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600">
               {page.screen_type}
             </span>
-            <time className="text-xs font-medium text-slate-500" dateTime={page.updated_at}>
+            <time
+              className="text-xs font-medium text-slate-500"
+              dateTime={page.updated_at}
+            >
               {dateFormatter.format(new Date(page.updated_at))}
             </time>
           </Link>
@@ -227,14 +239,27 @@ function RecentPages({
   );
 }
 
-function DashboardError({ message, onRetry }: { message: string; onRetry: () => void }) {
+function DashboardError({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
   return (
-    <div role="alert" className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      role="alert"
+      className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between"
+    >
       <span className="flex items-start gap-2">
         <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <span>{message}</span>
       </span>
-      <button type="button" onClick={onRetry} className="inline-flex items-center gap-2 self-start rounded-lg bg-white px-3 py-2 font-semibold ring-1 ring-red-200 sm:self-auto">
+      <button
+        type="button"
+        onClick={onRetry}
+        className="inline-flex items-center gap-2 self-start rounded-lg bg-white px-3 py-2 font-semibold ring-1 ring-red-200 sm:self-auto"
+      >
         <RotateCw className="size-4" aria-hidden="true" />
         Retry
       </button>
@@ -249,11 +274,16 @@ function DashboardEmptyState() {
         <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-blue-50 text-blue-700">
           <FolderTree className="size-6" aria-hidden="true" />
         </div>
-        <h2 className="mt-4 text-xl font-bold text-slate-950">No sitemap pages yet</h2>
+        <h2 className="mt-4 text-xl font-bold text-slate-950">
+          No sitemap pages yet
+        </h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
           Add or import sitemap pages to populate your dashboard overview.
         </p>
-        <Link href="/sitemap" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+        <Link
+          href="/sitemap"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+        >
           Open sitemap
           <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
@@ -264,10 +294,17 @@ function DashboardEmptyState() {
 
 function DashboardSkeleton() {
   return (
-    <div aria-label="Loading dashboard" aria-busy="true" className="animate-pulse">
+    <div
+      aria-label="Loading dashboard"
+      aria-busy="true"
+      className="animate-pulse"
+    >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="h-32 rounded-2xl border border-slate-200 bg-white" />
+          <div
+            key={index}
+            className="h-32 rounded-2xl border border-slate-200 bg-white"
+          />
         ))}
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-2">

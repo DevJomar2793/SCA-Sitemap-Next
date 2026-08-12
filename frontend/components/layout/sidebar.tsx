@@ -5,6 +5,7 @@ import {
   CircleGauge,
   FileClock,
   FolderTree,
+  Loader2,
   LogOut,
   Map,
   Settings,
@@ -143,31 +144,45 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className="m-4 rounded-2xl bg-blue-900/20 p-3 shadow-inner shadow-blue-950/10">
-        <button
-          type="button"
-          onClick={() => void handleLogout()}
-          disabled={isLoggingOut}
-          className="flex w-full items-center gap-3 rounded-xl p-1 text-left transition hover:bg-white/10 disabled:cursor-wait disabled:opacity-70"
-          aria-label="Sign out"
-        >
-          <div className="grid size-11 shrink-0 place-items-center rounded-full border-2 border-white bg-blue-100 text-blue-700">
+      <div className="m-4 rounded-2xl border border-white/12 bg-blue-950/18 p-3.5 shadow-inner shadow-blue-950/10 backdrop-blur-sm">
+        <p className="px-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-200/85">
+          Signed in as
+        </p>
+        <div className="mt-2.5 flex min-w-0 items-center gap-3">
+          <div className="grid size-11 shrink-0 place-items-center rounded-full border-2 border-white/90 bg-blue-50 text-blue-700 shadow-sm">
             <span className="text-sm font-bold">
               {getInitials(admin.full_name)}
             </span>
           </div>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-white">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-white" title={admin.full_name}>
               {admin.full_name}
-            </span>
-            <span className="mt-0.5 block text-xs text-blue-100">
+            </p>
+            <p className="mt-0.5 truncate text-xs text-blue-100" title={admin.email}>
               {admin.email}
-            </span>
-          </span>
-          <LogOut aria-hidden="true" className="size-4 text-blue-100" />
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+          className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/8 px-3 text-sm font-semibold text-white transition hover:border-white/25 hover:bg-white/14 disabled:cursor-wait disabled:opacity-70"
+          aria-label="Sign out"
+        >
+          {isLoggingOut ? (
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+          ) : (
+            <LogOut aria-hidden="true" className="size-4" />
+          )}
+          {isLoggingOut ? "Signing out..." : "Sign out"}
         </button>
         {logoutError ? (
-          <p role="alert" className="mt-2 px-1 text-xs leading-5 text-blue-50">
+          <p
+            role="alert"
+            className="mt-2 rounded-lg bg-red-950/20 px-2.5 py-2 text-xs leading-5 text-red-50"
+          >
             {logoutError}
           </p>
         ) : null}

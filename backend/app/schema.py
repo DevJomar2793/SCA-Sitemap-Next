@@ -103,3 +103,7 @@ class AdminUserRead(BaseModel):
     full_name: str
     is_active: bool
     created_at: datetime
+
+
+class AdminSessionRead(AdminUserRead):
+    expires_at: datetime

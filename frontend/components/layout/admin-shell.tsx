@@ -30,9 +30,12 @@ export function AdminShell({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   async function handleLogout() {
-    await logout();
-    clearStoredAuthenticatedAdmin();
-    router.replace("/login");
+    try {
+      await logout();
+    } finally {
+      clearStoredAuthenticatedAdmin();
+      router.replace("/login");
+    }
   }
 
   return (
