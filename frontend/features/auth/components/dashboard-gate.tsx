@@ -6,9 +6,14 @@ import { useEffect, useState } from "react";
 
 import { getStoredAuthenticatedAdmin } from "@/features/auth/api";
 import type { AdminUser } from "@/features/auth/types";
+import { AdminOverview } from "@/features/dashboard/components/admin-overview";
 import { SitemapDashboard } from "@/features/sitemap/components/sitemap-dashboard";
 
-export function DashboardGate() {
+export function AdminPageGate({
+  page,
+}: {
+  page: "dashboard" | "sitemap";
+}) {
   const router = useRouter();
   const [admin, setAdmin] = useState<AdminUser | null>(null);
 
@@ -34,5 +39,9 @@ export function DashboardGate() {
     );
   }
 
-  return <SitemapDashboard admin={admin} />;
+  return page === "dashboard" ? (
+    <AdminOverview admin={admin} />
+  ) : (
+    <SitemapDashboard admin={admin} />
+  );
 }

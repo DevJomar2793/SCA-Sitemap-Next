@@ -1,12 +1,9 @@
 "use client";
 
 import { AlertCircle, RotateCw } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { Sidebar } from "@/components/layout/sidebar";
-import { AppFooter } from "@/components/layout/app-footer";
-import { clearStoredAuthenticatedAdmin, logout } from "@/features/auth/api";
+import { AdminShell } from "@/components/layout/admin-shell";
 import type { AdminUser } from "@/features/auth/types";
 
 import { useSitemapPages } from "../hooks/use-sitemap-pages";
@@ -22,7 +19,6 @@ import { downloadSitemapCsv } from "../utils";
 import { DeleteSitemapDialog } from "./delete-sitemap-dialog";
 import { ImportSitemapDialog } from "./import-sitemap-dialog";
 import { NotificationToast } from "./notification-toast";
-import { SitemapHeader } from "./sitemap-header";
 import { SitemapPageModal } from "./sitemap-page-modal";
 import { SitemapPagination } from "./sitemap-pagination";
 import { SitemapTable, type SitemapRowAction } from "./sitemap-table";
@@ -38,7 +34,6 @@ type SitemapDashboardProps = {
 };
 
 export function SitemapDashboard({ admin }: SitemapDashboardProps) {
-  const router = useRouter();
   const {
     pages,
     isLoading,
@@ -53,7 +48,6 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
   const table = useSitemapTableState(pages);
   const { toast, isClosing, showToast, dismissToast } = useToast();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
   const [loadingRecordId, setLoadingRecordId] = useState<number | null>(null);
@@ -171,25 +165,9 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
     setIsFilterOpen(false);
   }
 
-  async function handleLogout() {
-    await logout();
-    clearStoredAuthenticatedAdmin();
-    router.replace("/login");
-  }
-
   return (
-    <div className="min-h-screen bg-[#f7f9fc]">
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        admin={admin}
-        onLogout={handleLogout}
-      />
-
-      <main className="flex min-h-screen flex-col lg:ml-67.5">
-        <SitemapHeader onOpenSidebar={() => setIsSidebarOpen(true)} />
-
-        <div className="mx-auto w-full max-w-[1800px] flex-1 px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
+    <AdminShell admin={admin} title="Sitemap Pages" section="Sitemap">
+      <div className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
           <SitemapToolbar
             query={table.query}
             onQueryChange={table.changeQuery}
@@ -247,10 +225,7 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
               />
             ) : null}
           </section>
-        </div>
-
-        <AppFooter />
-      </main>
+      </div>
 
       {modal ? (
         <SitemapPageModal
@@ -285,7 +260,7 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
           onDismiss={dismissToast}
         />
       ) : null}
-    </div>
+    </AdminShell>
   );
 }
 

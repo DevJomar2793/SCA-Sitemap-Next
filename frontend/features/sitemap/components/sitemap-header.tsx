@@ -2,11 +2,17 @@
 
 import { Bell, Menu } from "lucide-react";
 
-type SitemapHeaderProps = {
+type AdminHeaderProps = {
   onOpenSidebar: () => void;
+  title: string;
+  section: string;
 };
 
-export function SitemapHeader({ onOpenSidebar }: SitemapHeaderProps) {
+export function AdminHeader({
+  onOpenSidebar,
+  title,
+  section,
+}: AdminHeaderProps) {
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex min-h-26 max-w-[1800px] items-center justify-between gap-4 px-4 sm:px-7 lg:px-9">
@@ -21,12 +27,12 @@ export function SitemapHeader({ onOpenSidebar }: SitemapHeaderProps) {
           </button>
           <div className="min-w-0">
             <h1 className="truncate text-[25px] font-bold tracking-[-0.03em] text-slate-950 sm:text-[28px]">
-              Sitemap Pages
+              {title}
             </h1>
             <div className="mt-1 flex items-center gap-2 text-sm">
-              <span className="font-semibold text-blue-600">Sitemap</span>
+              <span className="font-semibold text-blue-600">{section}</span>
               <span className="text-slate-300">/</span>
-              <span className="text-slate-500">Sitemap Pages</span>
+              <span className="text-slate-500">{title}</span>
             </div>
           </div>
         </div>

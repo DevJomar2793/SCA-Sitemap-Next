@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
-import { DashboardGate } from "@/features/auth/components/dashboard-gate";
+import { AdminPageGate } from "@/features/auth/components/dashboard-gate";
 
 export const metadata: Metadata = {
-  title: "Sitemap Dashboard | SCA Sitemap",
-  description: "Manage and maintain the SCA application sitemap.",
+  title: "Dashboard | SCA Sitemap",
+  description: "Review SCA sitemap activity and catalogue coverage.",
 };
 
 export default function DashboardPage() {
-  return <DashboardGate />;
+  return <AdminPageGate page="dashboard" />;
 }

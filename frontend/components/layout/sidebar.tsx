@@ -10,6 +10,8 @@ import {
   Settings,
   X,
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import type { AdminUser } from "@/features/auth/types";
@@ -46,6 +48,7 @@ function SidebarContent({
   onClose?: () => void;
   onLogout: () => Promise<void>;
 }) {
+  const pathname = usePathname();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
@@ -96,22 +99,32 @@ function SidebarContent({
       </div>
 
       <nav className="flex-1 overflow-y-auto px-4 pb-5">
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-blue-50 transition hover:bg-white/8"
-        >
-          <CircleGauge aria-hidden="true" className="size-5" />
-          Dashboard
-        </button>
+        {[
+          { label: "Dashboard", href: "/dashboard", icon: CircleGauge },
+          { label: "Sitemap", href: "/sitemap", icon: FolderTree },
+        ].map((item, index) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
 
-        <button
-          type="button"
-          className="mt-2 flex w-full items-center gap-3 rounded-xl bg-blue-900/28 px-4 py-3.5 text-left text-sm font-semibold text-white shadow-inner shadow-blue-950/10"
-          aria-current="page"
-        >
-          <FolderTree aria-hidden="true" className="size-5" />
-          Sitemap
-        </button>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onNavigate={onClose}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 text-left text-sm font-semibold transition ${
+                index > 0 ? "mt-2" : ""
+              } ${
+                isActive
+                  ? "bg-blue-900/28 py-3.5 text-white shadow-inner shadow-blue-950/10"
+                  : "py-3 text-blue-50 hover:bg-white/8"
+              }`}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <Icon aria-hidden="true" className="size-5" />
+              {item.label}
+            </Link>
+          );
+        })}
 
         <div className="h-2" />
 

@@ -31,6 +31,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Features
 
 - Responsive sitemap table and mobile record cards
+- Dashboard overview with catalogue metrics, breakdowns, and recent updates
 - Public screen-number finder with detailed navigation results
 - Search and filters
 - Client-side pagination and CSV export
@@ -47,12 +48,14 @@ app/
 ├── page.tsx                   # Public screen finder at /
 ├── login/page.tsx             # Administrator sign-in at /login
 ├── register/page.tsx          # Public administrator registration at /register
-└── dashboard/page.tsx         # Protected sitemap administration at /dashboard
+├── dashboard/page.tsx         # Protected sitemap overview at /dashboard
+└── sitemap/page.tsx           # Protected sitemap administration at /sitemap
 components/
 └── layout/
     └── sidebar.tsx            # Shared desktop and mobile navigation
 features/
 ├── auth/                      # Authentication API, types, hooks, and forms
+├── dashboard/                 # Overview metrics and dashboard UI
 ├── search/                    # Screen finder UI and read-only results modal
 └── sitemap/
     ├── api.ts                 # Sitemap-only requests to backend endpoints
