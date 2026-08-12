@@ -5,11 +5,22 @@ import re
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.model import AdminSitemap
+from app.model import AdminSitemap, AdminUser
 from app.schema import AdminSitemapCreate, AdminSitemapUpdate
+from app.services.activity_logs import SITEMAP_MODULE, add_activity_log
 
 PREFIXED_SCREEN_PATTERN = re.compile(
     r"^(?P<alpha>[A-Za-z][A-Za-z-]*)[\s_-]+(?P<screen_number>.+)$"
+)
+AUDITED_FIELDS = (
+    "alpha",
+    "screen_number",
+    "screen_type",
+    "screen_description",
+    "file_label",
+    "screen_label",
+    "notes",
+    "page_location",
 )
 
 
@@ -26,6 +37,25 @@ def generate_sitemap_labels(
     file_label = f"{alpha.strip()}-{screen_number.strip()}"
     screen_label = f"{file_label}-{screen_description.strip()}"
     return {"file_label": file_label, "screen_label": screen_label}
+
+
+def sitemap_snapshot(page: AdminSitemap) -> dict[str, str]:
+    return {field: getattr(page, field) for field in AUDITED_FIELDS}
+
+
+def snapshot_changes(
+    values: dict[str, str],
+    *,
+    action: str,
+) -> list[dict[str, str | None]]:
+    return [
+        {
+            "field": field,
+            "previous_value": value if action == "DELETE" else None,
+            "new_value": value if action == "ADD" else None,
+        }
+        for field, value in values.items()
+    ]
 
 
 def get_sitemap_page(db: Session, page_id: int) -> AdminSitemap:
@@ -72,6 +102,7 @@ def search_sitemap_pages(db: Session, identifier: str) -> list[AdminSitemap]:
 def create_sitemap_page(
     db: Session,
     payload: AdminSitemapCreate,
+    actor: AdminUser,
 ) -> AdminSitemap:
     """Create and persist one sitemap page."""
     values = payload.model_dump()
@@ -84,6 +115,16 @@ def create_sitemap_page(
     )
     sitemap_page = AdminSitemap(**values)
     db.add(sitemap_page)
+    db.flush()
+    add_activity_log(
+        db,
+        actor_user_id=actor.id,
+        action="ADD",
+        module=SITEMAP_MODULE,
+        record_id=sitemap_page.id,
+        record_label=sitemap_page.screen_label,
+        changes=snapshot_changes(sitemap_snapshot(sitemap_page), action="ADD"),
+    )
     commit_changes(db)
     db.refresh(sitemap_page)
     return sitemap_page
@@ -93,9 +134,11 @@ def update_sitemap_page(
     db: Session,
     page_id: int,
     payload: AdminSitemapUpdate,
+    actor: AdminUser,
 ) -> AdminSitemap:
     """Apply validated partial changes to one sitemap page."""
     sitemap_page = get_sitemap_page(db, page_id)
+    previous_values = sitemap_snapshot(sitemap_page)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(sitemap_page, field, value)
 
@@ -107,14 +150,46 @@ def update_sitemap_page(
     sitemap_page.file_label = generated_labels["file_label"]
     sitemap_page.screen_label = generated_labels["screen_label"]
 
+    current_values = sitemap_snapshot(sitemap_page)
+    changes = [
+        {
+            "field": field,
+            "previous_value": previous_values[field],
+            "new_value": current_values[field],
+        }
+        for field in AUDITED_FIELDS
+        if previous_values[field] != current_values[field]
+    ]
+    if changes:
+        add_activity_log(
+            db,
+            actor_user_id=actor.id,
+            action="UPDATE",
+            module=SITEMAP_MODULE,
+            record_id=sitemap_page.id,
+            record_label=sitemap_page.screen_label,
+            changes=changes,
+        )
+
     commit_changes(db)
     db.refresh(sitemap_page)
     return sitemap_page
 
 
-def delete_sitemap_page(db: Session, page_id: int) -> None:
+def delete_sitemap_page(db: Session, page_id: int, actor: AdminUser) -> None:
     """Delete one sitemap page."""
-    db.delete(get_sitemap_page(db, page_id))
+    sitemap_page = get_sitemap_page(db, page_id)
+    snapshot = sitemap_snapshot(sitemap_page)
+    add_activity_log(
+        db,
+        actor_user_id=actor.id,
+        action="DELETE",
+        module=SITEMAP_MODULE,
+        record_id=sitemap_page.id,
+        record_label=sitemap_page.screen_label,
+        changes=snapshot_changes(snapshot, action="DELETE"),
+    )
+    db.delete(sitemap_page)
     commit_changes(db)
 
 

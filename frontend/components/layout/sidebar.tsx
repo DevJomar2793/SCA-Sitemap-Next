@@ -25,9 +25,9 @@ type SidebarProps = {
 };
 
 const secondaryNavigation = [
-  { label: "Reports", icon: BarChart3 },
-  { label: "Activity Logs", icon: FileClock },
-  { label: "Settings", icon: Settings },
+  { label: "Reports", icon: BarChart3, href: undefined },
+  { label: "Activity Logs", icon: FileClock, href: "/activity-logs" },
+  { label: "Settings", icon: Settings, href: undefined },
 ];
 
 function getInitials(fullName: string) {
@@ -131,7 +131,23 @@ function SidebarContent({
 
         {secondaryNavigation.map((item) => {
           const Icon = item.icon;
-          return (
+          const isActive = item.href === pathname;
+          return item.href ? (
+            <Link
+              key={item.label}
+              href={item.href}
+              onNavigate={onClose}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 text-left text-sm font-semibold transition ${
+                isActive
+                  ? "bg-blue-900/28 py-3.5 text-white shadow-inner shadow-blue-950/10"
+                  : "py-3 text-blue-50 hover:bg-white/8"
+              }`}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <Icon aria-hidden="true" className="size-5" />
+              {item.label}
+            </Link>
+          ) : (
             <button
               key={item.label}
               type="button"

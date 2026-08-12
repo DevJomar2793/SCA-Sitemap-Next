@@ -3,6 +3,7 @@
 import { AlertCircle, Loader2, RotateCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { ActivityLogsPage } from "@/features/activity-logs/components/activity-logs-page";
 import { AdminOverview } from "@/features/dashboard/components/admin-overview";
 import { SitemapDashboard } from "@/features/sitemap/components/sitemap-dashboard";
 import {
@@ -23,7 +24,7 @@ const MAXIMUM_TIMEOUT_MS = 2_147_000_000;
 export function AdminPageGate({
   page,
 }: {
-  page: "dashboard" | "sitemap";
+  page: "activity-logs" | "dashboard" | "sitemap";
 }) {
   const [session, setSession] = useState<AdminSession | null>(null);
   const [verificationError, setVerificationError] = useState("");
@@ -151,9 +152,7 @@ export function AdminPageGate({
     );
   }
 
-  return page === "dashboard" ? (
-    <AdminOverview admin={session} />
-  ) : (
-    <SitemapDashboard admin={session} />
-  );
+  if (page === "dashboard") return <AdminOverview admin={session} />;
+  if (page === "activity-logs") return <ActivityLogsPage admin={session} />;
+  return <SitemapDashboard admin={session} />;
 }

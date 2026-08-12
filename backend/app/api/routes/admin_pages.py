@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.database import get_db
-from app.model import AdminSitemap
+from app.model import AdminSitemap, AdminUser
 from app.schema import (
     AdminSitemapCreate,
     AdminSitemapRead,
@@ -50,16 +50,16 @@ def sitemap_page_not_found_error() -> HTTPException:
     response_model=AdminSitemapRead,
     status_code=status.HTTP_201_CREATED,
     dependencies=[
-        Depends(get_current_admin),
         Depends(require_trusted_origin),
     ],
     summary="Create an admin page",
 )
 def create_admin_page(
     payload: AdminSitemapCreate,
+    admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> AdminSitemap:
-    return create_sitemap_page(db, payload)
+    return create_sitemap_page(db, payload, admin)
 
 
 @router.get(
@@ -157,7 +157,6 @@ def get_admin_page(
     "/update-admin-page/{id}",
     response_model=AdminSitemapRead,
     dependencies=[
-        Depends(get_current_admin),
         Depends(require_trusted_origin),
     ],
     summary="Update an admin page",
@@ -165,10 +164,11 @@ def get_admin_page(
 def update_admin_page(
     id: int,
     payload: AdminSitemapUpdate,
+    admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> AdminSitemap:
     try:
-        return update_sitemap_page(db, id, payload)
+        return update_sitemap_page(db, id, payload, admin)
     except SitemapPageNotFoundError:
         raise sitemap_page_not_found_error() from None
 
@@ -177,17 +177,17 @@ def update_admin_page(
     "/delete-admin-page/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[
-        Depends(get_current_admin),
         Depends(require_trusted_origin),
     ],
     summary="Delete an admin page",
 )
 def delete_admin_page(
     id: int,
+    admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> Response:
     try:
-        delete_sitemap_page(db, id)
+        delete_sitemap_page(db, id, admin)
     except SitemapPageNotFoundError:
         raise sitemap_page_not_found_error() from None
     return Response(status_code=status.HTTP_204_NO_CONTENT)

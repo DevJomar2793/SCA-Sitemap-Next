@@ -76,6 +76,7 @@ backend directory when the application starts.
 | `PATCH` | `/api/v1/update-admin-page/{id}` | Update selected fields |
 | `DELETE` | `/api/v1/delete-admin-page/{id}` | Delete a page |
 | `POST` | `/api/v1/import-sitemap-pages` | Replace pages from an Excel workbook |
+| `GET` | `/api/v1/activity-logs` | Search immutable manual CRUD history |
 
 These dashboard endpoints require an authenticated administrator. The public
 `GET /api/v1/search-sitemap-pages?q={identifier}` endpoint remains available
@@ -102,6 +103,20 @@ Example create request:
 
 `page_location` contains concise navigation instructions describing how to
 reach the screen. The API field name is retained for compatibility.
+
+## Activity logs
+
+Successful manual sitemap Add, Update, and Delete operations create immutable
+activity records in the same database transaction as the underlying change.
+Each entry retains the affected record ID and label, the current administrator
+ID, a field-level snapshot or before/after diff, and a UTC timestamp. Workbook
+imports are intentionally not audited.
+
+`GET /api/v1/activity-logs` supports `q`, `user_id`, `action`, `module`,
+`date_from`, `date_to`, `page`, and `page_size`. `date_from` is inclusive and
+`date_to` is exclusive. Results are ordered newest first and include filter
+options plus pagination totals. There are no public endpoints for modifying or
+deleting activity history.
 
 ## Excel import
 

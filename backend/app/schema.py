@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
@@ -107,3 +107,40 @@ class AdminUserRead(BaseModel):
 
 class AdminSessionRead(AdminUserRead):
     expires_at: datetime
+
+
+class ActivityActorRead(BaseModel):
+    id: int
+    full_name: str
+    email: EmailStr
+
+
+class ActivityChangeRead(BaseModel):
+    field: str
+    previous_value: str | None
+    new_value: str | None
+
+
+class ActivityLogRead(BaseModel):
+    id: int
+    performed_by: ActivityActorRead | None
+    action: Literal["ADD", "UPDATE", "DELETE"]
+    module: str
+    record_id: int
+    record_label: str
+    changes: list[ActivityChangeRead]
+    created_at: datetime
+
+
+class ActivityFilterOptions(BaseModel):
+    users: list[ActivityActorRead]
+    modules: list[str]
+
+
+class ActivityLogPageRead(BaseModel):
+    items: list[ActivityLogRead]
+    total: int
+    page: int
+    page_size: int
+    page_count: int
+    filter_options: ActivityFilterOptions
