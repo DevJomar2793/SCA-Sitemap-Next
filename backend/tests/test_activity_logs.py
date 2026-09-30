@@ -6,9 +6,9 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-import app.services.sitemap_pages as sitemap_pages
-from app.database import get_db
-from app.model import ActivityLog, AdminSitemap, AdminUser
+import services.sitemap_pages as sitemap_pages
+from database import get_db
+from model import ActivityLog, AdminSitemap, AdminUser
 
 ACTIVITY_PATH = "/api/v1/activity-logs"
 CREATE_PATH = "/api/v1/add-admin-page"

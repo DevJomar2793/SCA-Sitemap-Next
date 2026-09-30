@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
-from app.config import Settings
-from app.database import get_db
-from app.model import AdminUser
-from app.schema import AdminLogin, AdminRegister, AdminSessionRead, AdminUserRead
-from app.security import (
+from config import Settings
+from database import get_db
+from model import AdminUser
+from schema import AdminLogin, AdminRegister, AdminSessionRead, AdminUserRead
+from security import (
     AUTH_COOKIE_NAME,
     AuthenticatedSession,
     authenticate_admin,
@@ -15,7 +15,7 @@ from app.security import (
     get_settings,
     require_trusted_origin,
 )
-from app.services.admin_users import DuplicateAdminEmailError, register_admin
+from services.admin_users import DuplicateAdminEmailError, register_admin
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -89,6 +89,7 @@ def get_session(
 )
 def register(
     payload: AdminRegister,
+    _: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> AdminUser:
     try:

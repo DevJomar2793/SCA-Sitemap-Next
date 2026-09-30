@@ -42,7 +42,7 @@ python -m pip install -r requirements-dev.txt
 ## Run the API
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn main:app --reload
 ```
 
 The backend loads `backend/.env` automatically at startup.
@@ -53,20 +53,19 @@ Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
 ## Project structure
 
 ```text
-app/
-├── api/routes/       # HTTP endpoints
-├── config.py         # Environment settings
-├── database.py       # SQLite connection and sessions
-├── model.py          # SQLAlchemy database model
-├── schema.py         # Request and response validation
-├── services/         # Excel parsing and other business logic
-└── main.py           # FastAPI application setup
+main.py                # FastAPI application setup
+routes/                # HTTP endpoints
+config.py              # Environment settings
+database.py            # PostgreSQL connection and sessions
+model.py               # SQLAlchemy database models
+schema.py              # Request and response validation
+services/              # Excel parsing and sitemap operations
 ```
 
 ## Admin page CRUD
 
-The API stores sitemap records in `sitemap.db`, created automatically in the
-backend directory when the application starts.
+The API stores sitemap records in PostgreSQL. Tables are created automatically
+when the application starts against a new database.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -136,14 +135,18 @@ existing records unchanged.
 
 ## Configuration
 
-The service reads these optional environment variables:
+The service reads these environment variables:
 
 | Variable | Default |
 | --- | --- |
 | `APP_NAME` | `SCA Sitemap API` |
 | `APP_VERSION` | `0.1.0` |
 | `CORS_ORIGINS` | `http://localhost:3000` |
-| `DATABASE_PATH` | `backend/sitemap.db` |
+| `POSTGRES_HOST` | Required PostgreSQL host, such as `localhost` |
+| `POSTGRES_PORT` | Required PostgreSQL port, usually `5432` |
+| `POSTGRES_DB` | Required PostgreSQL database name |
+| `POSTGRES_USER` | Required PostgreSQL username |
+| `POSTGRES_PASSWORD` | Required PostgreSQL password |
 
 Set `CORS_ORIGINS` to a comma-separated list when multiple browser origins are
 required.
@@ -178,10 +181,10 @@ Authentication failures return a machine-readable `detail.code`, including
 `session_expired`, `not_authenticated`, `invalid_session`, `inactive_account`,
 or `incorrect_credentials`.
 
-Anyone can register a full administrator account:
+Only a signed-in administrator can register another administrator:
 
 ```bash
-curl -H "Content-Type: application/json" \
+curl -b cookies.txt -H "Content-Type: application/json" \
   -d '{
     "email":"second.admin@example.com",
     "full_name":"Second Administrator",
@@ -190,13 +193,9 @@ curl -H "Content-Type: application/json" \
   http://localhost:8000/api/v1/auth/register
 ```
 
-Registration returns an active account but does not create a session. Browser
-clients register and then log in to receive the session cookie. Emails are
-case-insensitive, passwords must contain 5–128 characters, and an existing
-email returns `409 Conflict`.
-
-> Registration is public by design. Every successful registration receives full
-> administrator access to dashboard endpoints.
+Registration returns an active account but does not create or replace the
+creator's session. Emails are case-insensitive, passwords must contain 5–128
+characters, and an existing email returns `409 Conflict`.
 
 Log out when finished:
 
@@ -222,5 +221,8 @@ Authentication configuration:
 ## Tests
 
 ```bash
-pytest
+TEST_DATABASE_URL=postgresql+psycopg://sca_sitemap:password@localhost:5432/sca_sitemap_test pytest
 ```
+
+`TEST_DATABASE_URL` must point to a dedicated PostgreSQL database. The test
+suite clears its tables before and after each test.

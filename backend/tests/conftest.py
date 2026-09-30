@@ -1,16 +1,20 @@
 from collections.abc import Generator
-from pathlib import Path
+import os
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.config import Settings
-from app.database import Base, get_db
-from app.main import create_app
-from app.model import AdminUser
-from app.security import hash_password
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
+if not TEST_DATABASE_URL:
+    raise RuntimeError("TEST_DATABASE_URL must point to an isolated PostgreSQL database")
+
+from config import Settings
+from database import Base, get_db
+from main import create_app
+from model import AdminUser
+from security import hash_password
 
 TEST_ADMIN_EMAIL = "admin@example.com"
 TEST_ADMIN_NAME = "Test Administrator"
@@ -19,19 +23,25 @@ TEST_AUTH_SECRET = "test-auth-secret-that-is-at-least-32-characters"
 
 
 @pytest.fixture
-def client(tmp_path: Path) -> Generator[TestClient, None, None]:
-    """Provide an API client connected to a fresh temporary database."""
-    database_path = tmp_path / "test-sitemap.db"
-    test_engine = create_engine(
-        f"sqlite:///{database_path.as_posix()}",
-        connect_args={"check_same_thread": False},
-    )
+def database_engine() -> Generator:
+    """Provide a clean PostgreSQL database for one test."""
+    test_engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
+    Base.metadata.drop_all(bind=test_engine)
+    Base.metadata.create_all(bind=test_engine)
+    yield test_engine
+    Base.metadata.drop_all(bind=test_engine)
+    test_engine.dispose()
+
+
+@pytest.fixture
+def client(database_engine) -> Generator[TestClient, None, None]:
+    """Provide an API client connected to a fresh PostgreSQL test database."""
+    test_engine = database_engine
     TestSessionLocal = sessionmaker(
         bind=test_engine,
         autoflush=False,
         expire_on_commit=False,
     )
-    Base.metadata.create_all(bind=test_engine)
     with TestSessionLocal() as db:
         db.add(
             AdminUser(
@@ -67,4 +77,3 @@ def client(tmp_path: Path) -> Generator[TestClient, None, None]:
         yield test_client
 
     application.dependency_overrides.clear()
-    test_engine.dispose()

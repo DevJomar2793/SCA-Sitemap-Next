@@ -9,9 +9,9 @@ from pwdlib import PasswordHash
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.config import Settings
-from app.database import get_db
-from app.model import AdminUser
+from config import Settings
+from database import get_db
+from model import AdminUser
 
 AUTH_COOKIE_NAME = "sca_session"
 JWT_ALGORITHM = "HS256"

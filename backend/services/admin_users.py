@@ -4,9 +4,9 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.model import AdminUser
-from app.schema import AdminRegister
-from app.security import hash_password, normalize_email
+from model import AdminUser
+from schema import AdminRegister
+from security import hash_password, normalize_email
 
 
 class DuplicateAdminEmailError(Exception):

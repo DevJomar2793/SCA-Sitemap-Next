@@ -1,16 +1,15 @@
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 import jwt
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import Settings
-from app.database import Base, get_db
-from app.model import AdminUser
-from app.security import (
+from config import Settings
+from database import get_db
+from model import AdminUser
+from security import (
     AUTH_COOKIE_NAME,
     JWT_ALGORITHM,
     bootstrap_admin,
@@ -185,7 +184,7 @@ def test_register_validates_account_fields(
     assert client.post(REGISTER_PATH, json=payload).status_code == 422
 
 
-def test_public_registration_creates_an_active_administrator(
+def test_unauthenticated_registration_is_rejected(
     client: TestClient,
 ) -> None:
     client.cookies.clear()
@@ -199,10 +198,13 @@ def test_public_registration_creates_an_active_administrator(
         },
     )
 
-    assert response.status_code == 201
-    assert response.json()["email"] == "new@example.com"
-    assert response.json()["full_name"] == "New Administrator"
-    assert response.json()["is_active"] is True
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": {
+            "code": "not_authenticated",
+            "message": "Not authenticated",
+        }
+    }
 
 
 @pytest.mark.parametrize(
@@ -364,9 +366,7 @@ def test_untrusted_origins_cannot_make_state_changes(
     assert response.json() == {"detail": "Request origin is not allowed"}
 
 
-def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
-    engine = create_engine(f"sqlite:///{(tmp_path / 'auth.db').as_posix()}")
-    Base.metadata.create_all(bind=engine)
+def test_bootstrap_creates_hashed_admin_once(database_engine) -> None:
     settings = Settings(
         auth_secret_key=TEST_AUTH_SECRET,
         admin_email=f"  {TEST_ADMIN_EMAIL.upper()} ",
@@ -374,7 +374,7 @@ def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
         admin_name=TEST_ADMIN_NAME,
     )
 
-    with Session(engine) as db:
+    with Session(database_engine) as db:
         created = bootstrap_admin(db, settings)
         assert created is not None
         assert created.email == TEST_ADMIN_EMAIL
@@ -384,7 +384,6 @@ def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
         assert bootstrap_admin(db, settings) is None
         assert len(list(db.scalars(select(AdminUser)))) == 1
 
-    engine.dispose()
 
 
 @pytest.mark.parametrize(
@@ -411,14 +410,9 @@ def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
     ],
 )
 def test_bootstrap_rejects_insecure_configuration(
-    tmp_path: Path,
+    database_engine,
     settings: Settings,
     message: str,
 ) -> None:
-    engine = create_engine(f"sqlite:///{(tmp_path / 'invalid.db').as_posix()}")
-    Base.metadata.create_all(bind=engine)
-
-    with Session(engine) as db, pytest.raises(RuntimeError, match=message):
+    with Session(database_engine) as db, pytest.raises(RuntimeError, match=message):
         bootstrap_admin(db, settings)
-
-    engine.dispose()

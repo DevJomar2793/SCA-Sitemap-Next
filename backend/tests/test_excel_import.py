@@ -4,8 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from openpyxl import Workbook
 
-import app.services.excel_import as excel_import
-from app.api.routes.admin_pages import MAX_UPLOAD_BYTES
+import services.excel_import as excel_import
+from routes.admin_pages import MAX_UPLOAD_BYTES
 
 IMPORT_PATH = "/api/v1/import-sitemap-pages"
 LIST_PATH = "/api/v1/get-admin-pages"

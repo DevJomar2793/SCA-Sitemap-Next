@@ -7,7 +7,7 @@ from typing import Literal
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.model import ActivityLog, AdminUser
+from model import ActivityLog, AdminUser
 
 ActivityAction = Literal["ADD", "UPDATE", "DELETE"]
 SITEMAP_MODULE = "Sitemap"

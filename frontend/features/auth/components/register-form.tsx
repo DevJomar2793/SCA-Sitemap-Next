@@ -1,11 +1,10 @@
 "use client";
 
-import { ArrowRight, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { CheckCircle2, LockKeyhole, Mail, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { login, register, storeAuthenticatedSession } from "../api";
+import { register } from "../api";
 import { AuthFormField } from "./auth-form-field";
 import { AuthPageShell } from "./auth-page-shell";
 
@@ -13,12 +12,12 @@ const MINIMUM_PASSWORD_LENGTH = 5;
 const MAXIMUM_PASSWORD_LENGTH = 128;
 
 export function RegisterForm() {
-  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -27,7 +26,7 @@ export function RegisterForm() {
     const normalizedEmail = email.trim();
 
     if (!normalizedName || !normalizedEmail || !password || !confirmPassword) {
-      setError("Complete all fields to create your account.");
+      setError("Complete all fields to create the administrator account.");
       return;
     }
 
@@ -37,22 +36,25 @@ export function RegisterForm() {
     }
 
     setError("");
+    setSuccessMessage("");
     setIsSubmitting(true);
 
     try {
-      await register({
+      const admin = await register({
         full_name: normalizedName,
         email: normalizedEmail,
         password,
       });
-      const session = await login({ email: normalizedEmail, password });
-      storeAuthenticatedSession(session);
-      router.replace("/dashboard");
+      setSuccessMessage(`${admin.full_name} can now sign in as an administrator.`);
+      setFullName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
     } catch (registrationError) {
       setError(
         registrationError instanceof Error
           ? registrationError.message
-          : "Unable to create your account. Please try again.",
+          : "Unable to create the administrator account. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -62,15 +64,15 @@ export function RegisterForm() {
   return (
     <AuthPageShell
       title="Create administrator account"
-      description="Register to access the sitemap administration dashboard."
+      description="Create an account for another administrator."
       footer={
         <p className="mt-6 text-center text-sm text-slate-500">
-          Already have an account?{" "}
+          Only signed-in administrators can create accounts. {" "}
           <Link
-            href="/login"
+            href="/dashboard"
             className="font-semibold text-blue-700 hover:text-blue-900"
           >
-            Sign in
+            Back to dashboard
           </Link>
         </p>
       }
@@ -85,7 +87,7 @@ export function RegisterForm() {
           autoFocus
           required
           disabled={isSubmitting}
-          placeholder="Your full name"
+          placeholder="Administrator's full name"
           icon={<UserRound className="size-4.5" aria-hidden="true" />}
         />
         <AuthFormField
@@ -137,15 +139,22 @@ export function RegisterForm() {
           </p>
         ) : null}
 
+        {successMessage ? (
+          <p
+            role="status"
+            className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm font-medium text-emerald-700"
+          >
+            <CheckCircle2 className="size-4.5 shrink-0" aria-hidden="true" />
+            {successMessage}
+          </p>
+        ) : null}
+
         <button
           type="submit"
           disabled={isSubmitting}
           className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
         >
           {isSubmitting ? "Creating account..." : "Create account"}
-          {!isSubmitting ? (
-            <ArrowRight className="size-4" aria-hidden="true" />
-          ) : null}
         </button>
       </form>
     </AuthPageShell>

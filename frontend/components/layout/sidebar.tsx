@@ -9,6 +9,7 @@ import {
   LogOut,
   Map,
   Settings,
+  UserPlus,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +26,7 @@ type SidebarProps = {
 };
 
 const secondaryNavigation = [
+  { label: "Administrators", icon: UserPlus, href: "/register" },
   { label: "Reports", icon: BarChart3, href: undefined },
   { label: "Activity Logs", icon: FileClock, href: "/activity-logs" },
   { label: "Settings", icon: Settings, href: undefined },

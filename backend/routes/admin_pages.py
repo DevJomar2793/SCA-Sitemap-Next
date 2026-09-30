@@ -13,17 +13,17 @@ from fastapi import (
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from app.database import get_db
-from app.model import AdminSitemap, AdminUser
-from app.schema import (
+from database import get_db
+from model import AdminSitemap, AdminUser
+from schema import (
     AdminSitemapCreate,
     AdminSitemapRead,
     AdminSitemapUpdate,
     SitemapImportRead,
 )
-from app.security import get_current_admin, require_trusted_origin
-from app.services.excel_import import WorkbookImportError, parse_sitemap_workbook
-from app.services.sitemap_pages import (
+from security import get_current_admin, require_trusted_origin
+from services.excel_import import WorkbookImportError, parse_sitemap_workbook
+from services.sitemap_pages import (
     SitemapPageNotFoundError,
     create_sitemap_page,
     delete_sitemap_page,

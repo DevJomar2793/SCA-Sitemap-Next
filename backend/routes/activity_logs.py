@@ -5,10 +5,10 @@ from typing import Literal
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.schema import ActivityLogPageRead
-from app.security import get_current_admin
-from app.services.activity_logs import list_activity_logs
+from database import get_db
+from schema import ActivityLogPageRead
+from security import get_current_admin
+from services.activity_logs import list_activity_logs
 
 router = APIRouter(prefix="/activity-logs", tags=["activity logs"])
 

@@ -23,6 +23,11 @@ class Settings:
     app_name: str = DEFAULT_APP_NAME
     app_version: str = DEFAULT_APP_VERSION
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
+    postgres_host: str | None = None
+    postgres_port: str | None = None
+    postgres_db: str | None = None
+    postgres_user: str | None = None
+    postgres_password: str | None = None
     auth_secret_key: str | None = None
     auth_cookie_secure: bool = False
     auth_session_minutes: int = DEFAULT_AUTH_SESSION_MINUTES
@@ -46,6 +51,11 @@ class Settings:
             app_name=os.getenv("APP_NAME", DEFAULT_APP_NAME),
             app_version=os.getenv("APP_VERSION", DEFAULT_APP_VERSION),
             cors_origins=cors_origins,
+            postgres_host=os.getenv("POSTGRES_HOST"),
+            postgres_port=os.getenv("POSTGRES_PORT"),
+            postgres_db=os.getenv("POSTGRES_DB"),
+            postgres_user=os.getenv("POSTGRES_USER"),
+            postgres_password=os.getenv("POSTGRES_PASSWORD"),
             auth_secret_key=os.getenv("AUTH_SECRET_KEY"),
             auth_cookie_secure=parse_boolean(os.getenv("AUTH_COOKIE_SECURE")),
             auth_session_minutes=int(

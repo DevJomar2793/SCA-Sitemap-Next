@@ -5,9 +5,9 @@ import re
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.model import AdminSitemap, AdminUser
-from app.schema import AdminSitemapCreate, AdminSitemapUpdate
-from app.services.activity_logs import SITEMAP_MODULE, add_activity_log
+from model import AdminSitemap, AdminUser
+from schema import AdminSitemapCreate, AdminSitemapUpdate
+from services.activity_logs import SITEMAP_MODULE, add_activity_log
 
 PREFIXED_SCREEN_PATTERN = re.compile(
     r"^(?P<alpha>[A-Za-z][A-Za-z-]*)[\s_-]+(?P<screen_number>.+)$"

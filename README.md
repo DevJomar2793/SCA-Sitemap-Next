@@ -4,7 +4,7 @@ SCA Sitemap is a two-project application for finding application screens and
 maintaining the sitemap catalogue.
 
 - `frontend/` is the Next.js screen finder and administration dashboard.
-- `backend/` is the FastAPI service, SQLite storage, authentication, and Excel
+- `backend/` is the FastAPI service, PostgreSQL storage, authentication, and Excel
   workbook importer.
 
 For local development, run the backend at `http://localhost:8000` and the
@@ -21,15 +21,16 @@ API URL to the exposed backend port:
 NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ```
 
-Set `CORS_ORIGINS=http://localhost:3000` and real authentication/bootstrap
-values in `backend/.env`.
+Set the `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, and
+`POSTGRES_PASSWORD` values plus real authentication/bootstrap values in
+`backend/.env`.
 
 From the repository root, build and start both services:
 
 ```bash
-docker compose --env-file frontend/.env up --build
+docker compose --env-file backend/.env --env-file frontend/.env up --build
 ```
 
 The frontend is available at `http://localhost:3000` and the API at
-`http://localhost:8000`. Backend SQLite data is stored in the named
-`backend_data` Docker volume and is retained when containers restart.
+`http://localhost:8000`. PostgreSQL data is stored in the named
+`postgres_data` Docker volume and is retained when containers restart.
