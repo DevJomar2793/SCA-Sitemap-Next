@@ -32,7 +32,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - Responsive sitemap table and mobile record cards
 - Dashboard overview with catalogue metrics, breakdowns, and recent updates
-- Read-only Activity Logs with search, filters, expandable changes, and pagination
+- Read-only administrative audit trail with actor snapshots, event filters,
+  expandable changes, and pagination
 - Public screen-number finder with detailed navigation results
 - Search and filters
 - Client-side pagination and CSV export

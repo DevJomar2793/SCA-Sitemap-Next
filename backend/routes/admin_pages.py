@@ -95,13 +95,13 @@ def search_sitemap_pages(
     "/import-sitemap-pages",
     response_model=SitemapImportRead,
     dependencies=[
-        Depends(get_current_admin),
         Depends(require_trusted_origin),
     ],
     summary="Replace sitemap pages from an Excel workbook",
 )
 async def import_sitemap_pages(
     file: UploadFile = File(...),
+    admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> SitemapImportRead:
     filename = file.filename or ""
@@ -127,7 +127,14 @@ async def import_sitemap_pages(
             detail=str(error),
         ) from error
 
-    replace_sitemap_pages(db, result.records)
+    replace_sitemap_pages(
+        db,
+        result.records,
+        admin,
+        filename=filename,
+        skipped_count=result.skipped_count,
+        worksheet_count=result.worksheet_count,
+    )
 
     return SitemapImportRead(
         imported_count=len(result.records),

@@ -1,15 +1,13 @@
 "use client";
 
 import {
-  BarChart3,
   CircleGauge,
   FileClock,
   FolderTree,
   Loader2,
   LogOut,
   Map,
-  Settings,
-  UserPlus,
+  Search,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -23,13 +21,11 @@ type SidebarProps = {
   onClose: () => void;
   admin: AdminUser;
   onLogout: () => Promise<void>;
+  appearance?: "default" | "finder";
 };
 
 const secondaryNavigation = [
-  { label: "Administrators", icon: UserPlus, href: "/register" },
-  { label: "Reports", icon: BarChart3, href: undefined },
   { label: "Activity Logs", icon: FileClock, href: "/activity-logs" },
-  { label: "Settings", icon: Settings, href: undefined },
 ];
 
 function getInitials(fullName: string) {
@@ -46,12 +42,16 @@ function SidebarContent({
   admin,
   onClose,
   onLogout,
+  appearance = "default",
 }: {
   admin: AdminUser;
   onClose?: () => void;
   onLogout: () => Promise<void>;
+  appearance?: "default" | "finder";
 }) {
   const pathname = usePathname();
+  const isFinder = appearance === "finder";
+  const BrandIcon = isFinder ? Search : Map;
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
@@ -73,10 +73,16 @@ function SidebarContent({
     <>
       <div className="flex h-29 items-center justify-between px-7">
         <div className="flex items-center gap-3">
-          <div className="grid size-12 place-items-center rounded-xl border-2 border-white/85 bg-white/12 shadow-sm">
-            <Map
+          <div
+            className={
+              isFinder
+                ? "grid size-12 place-items-center rounded-2xl border border-sky-300/70 bg-blue-500/20 shadow-[0_0_26px_rgba(38,149,255,0.2)]"
+                : "grid size-12 place-items-center rounded-xl border-2 border-white/85 bg-white/12 shadow-sm"
+            }
+          >
+            <BrandIcon
               aria-hidden="true"
-              className="size-7 text-white"
+              className={`${isFinder ? "size-6" : "size-7"} text-white`}
               strokeWidth={2}
             />
           </div>
@@ -118,7 +124,9 @@ function SidebarContent({
                 index > 0 ? "mt-2" : ""
               } ${
                 isActive
-                  ? "bg-blue-900/28 py-3.5 text-white shadow-inner shadow-blue-950/10"
+                  ? isFinder
+                    ? "border border-sky-300/25 bg-white/12 py-3.5 text-white shadow-lg shadow-blue-950/15"
+                    : "bg-blue-900/28 py-3.5 text-white shadow-inner shadow-blue-950/10"
                   : "py-3 text-blue-50 hover:bg-white/8"
               }`}
               aria-current={isActive ? "page" : undefined}
@@ -141,7 +149,9 @@ function SidebarContent({
               onNavigate={onClose}
               className={`flex w-full items-center gap-3 rounded-xl px-4 text-left text-sm font-semibold transition ${
                 isActive
-                  ? "bg-blue-900/28 py-3.5 text-white shadow-inner shadow-blue-950/10"
+                  ? isFinder
+                    ? "border border-sky-300/25 bg-white/12 py-3.5 text-white shadow-lg shadow-blue-950/15"
+                    : "bg-blue-900/28 py-3.5 text-white shadow-inner shadow-blue-950/10"
                   : "py-3 text-blue-50 hover:bg-white/8"
               }`}
               aria-current={isActive ? "page" : undefined}
@@ -209,11 +219,32 @@ function SidebarContent({
   );
 }
 
-export function Sidebar({ isOpen, onClose, admin, onLogout }: SidebarProps) {
+export function Sidebar({
+  isOpen,
+  onClose,
+  admin,
+  onLogout,
+  appearance = "default",
+}: SidebarProps) {
+  const backgroundClass =
+    appearance === "finder"
+      ? "bg-linear-to-b from-[#052b70] via-[#041f57] to-[#03163d]"
+      : "bg-linear-to-b from-[#2f7fd8] via-[#2874ce] to-[#2269c2]";
+
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-67.5 flex-col bg-linear-to-b from-[#2f7fd8] via-[#2874ce] to-[#2269c2] shadow-xl lg:flex">
-        <SidebarContent admin={admin} onLogout={onLogout} />
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 hidden w-67.5 flex-col lg:flex ${backgroundClass} ${
+          appearance === "finder"
+            ? "border-r border-white/10 shadow-2xl"
+            : "shadow-xl"
+        }`}
+      >
+        <SidebarContent
+          admin={admin}
+          onLogout={onLogout}
+          appearance={appearance}
+        />
       </aside>
 
       <div
@@ -232,11 +263,18 @@ export function Sidebar({ isOpen, onClose, admin, onLogout }: SidebarProps) {
           tabIndex={isOpen ? 0 : -1}
         />
         <aside
-          className={`absolute inset-y-0 left-0 flex w-71.5 max-w-[86vw] flex-col bg-linear-to-b from-[#2f7fd8] via-[#2874ce] to-[#2269c2] shadow-2xl transition-transform duration-200 ${
+          className={`absolute inset-y-0 left-0 flex w-71.5 max-w-[86vw] flex-col shadow-2xl transition-transform duration-200 ${backgroundClass} ${
+            appearance === "finder" ? "border-r border-white/10" : ""
+          } ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <SidebarContent admin={admin} onClose={onClose} onLogout={onLogout} />
+          <SidebarContent
+            admin={admin}
+            onClose={onClose}
+            onLogout={onLogout}
+            appearance={appearance}
+          />
         </aside>
       </div>
     </>

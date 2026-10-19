@@ -24,15 +24,20 @@ export function AdminOverview({ admin }: { admin: AdminUser }) {
   const summary = useMemo(() => deriveDashboardSummary(pages), [pages]);
 
   return (
-    <AdminShell admin={admin} title="Dashboard" section="Overview">
+    <AdminShell
+      admin={admin}
+      title="Dashboard"
+      section="Overview"
+      appearance="finder"
+    >
       <div className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-blue-600">Welcome back</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
+            <p className="text-sm font-semibold text-sky-300">Welcome back</p>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
               Sitemap at a glance
             </h2>
-            <p className="mt-1.5 text-sm leading-6 text-slate-500">
+            <p className="mt-1.5 text-sm leading-6 text-blue-100">
               Review catalogue coverage and recently updated screens.
             </p>
           </div>
@@ -101,10 +106,10 @@ export function AdminOverview({ admin }: { admin: AdminUser }) {
 }
 
 const metricColors = {
-  blue: "bg-blue-50 text-blue-700",
-  violet: "bg-violet-50 text-violet-700",
-  cyan: "bg-cyan-50 text-cyan-700",
-  emerald: "bg-emerald-50 text-emerald-700",
+  blue: "bg-linear-to-br from-sky-100 to-blue-100 text-blue-700",
+  violet: "bg-linear-to-br from-violet-100 to-indigo-100 text-violet-700",
+  cyan: "bg-linear-to-br from-cyan-100 to-sky-100 text-cyan-700",
+  emerald: "bg-linear-to-br from-emerald-100 to-teal-100 text-emerald-700",
 };
 
 function MetricCard({
@@ -119,7 +124,7 @@ function MetricCard({
   color: keyof typeof metricColors;
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-2xl border border-blue-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(0,13,45,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_50px_rgba(0,13,45,0.28)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-slate-500">{label}</p>
@@ -149,7 +154,7 @@ function BreakdownPanel({
   const maximumCount = Math.max(...items.map((item) => item.count), 1);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-2xl border border-blue-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(0,13,45,0.2)] sm:p-6">
       <h3 className="text-lg font-bold text-slate-950">{title}</h3>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
       <div className="mt-6 max-h-80 space-y-5 overflow-y-auto pr-1">
@@ -168,7 +173,7 @@ function BreakdownPanel({
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full min-w-1 rounded-full bg-linear-to-r from-blue-500 to-blue-700"
+                className="h-full min-w-1 rounded-full bg-linear-to-r from-sky-400 via-blue-500 to-blue-700"
                 style={{ width: `${(item.count / maximumCount) * 100}%` }}
               />
             </div>
@@ -190,8 +195,8 @@ function RecentPages({
   });
 
   return (
-    <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
+    <section className="mt-6 overflow-hidden rounded-2xl border border-blue-200/80 bg-white shadow-[0_18px_45px_rgba(0,13,45,0.2)]">
+      <div className="flex items-center justify-between gap-4 border-b border-blue-100 bg-linear-to-r from-blue-50/80 to-white px-5 py-5 sm:px-6">
         <div>
           <h3 className="text-lg font-bold text-slate-950">Recently updated</h3>
           <p className="mt-1 text-sm text-slate-500">
@@ -269,7 +274,7 @@ function DashboardError({
 
 function DashboardEmptyState() {
   return (
-    <section className="grid min-h-100 place-items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 text-center shadow-sm">
+    <section className="grid min-h-100 place-items-center rounded-2xl border border-dashed border-blue-300 bg-white px-5 text-center shadow-[0_18px_45px_rgba(0,13,45,0.2)]">
       <div>
         <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-blue-50 text-blue-700">
           <FolderTree className="size-6" aria-hidden="true" />
@@ -282,7 +287,7 @@ function DashboardEmptyState() {
         </p>
         <Link
           href="/sitemap"
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-linear-to-br from-sky-400 via-blue-500 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:from-sky-300 hover:to-blue-700"
         >
           Open sitemap
           <ArrowRight className="size-4" aria-hidden="true" />
@@ -303,15 +308,15 @@ function DashboardSkeleton() {
         {Array.from({ length: 4 }, (_, index) => (
           <div
             key={index}
-            className="h-32 rounded-2xl border border-slate-200 bg-white"
+            className="h-32 rounded-2xl border border-blue-200/80 bg-white/90"
           />
         ))}
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <div className="h-84 rounded-2xl border border-slate-200 bg-white" />
-        <div className="h-84 rounded-2xl border border-slate-200 bg-white" />
+        <div className="h-84 rounded-2xl border border-blue-200/80 bg-white/90" />
+        <div className="h-84 rounded-2xl border border-blue-200/80 bg-white/90" />
       </div>
-      <div className="mt-6 h-80 rounded-2xl border border-slate-200 bg-white" />
+      <div className="mt-6 h-80 rounded-2xl border border-blue-200/80 bg-white/90" />
     </div>
   );
 }

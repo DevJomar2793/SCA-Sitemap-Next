@@ -1,7 +1,7 @@
 from collections.abc import Generator
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -69,6 +69,47 @@ def init_db() -> None:
     import model  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    upgrade_activity_log_schema()
+
+
+def upgrade_activity_log_schema() -> None:
+    """Apply the small audit-log upgrade needed by existing databases."""
+    inspector = inspect(engine)
+    if "activity_logs" not in inspector.get_table_names():
+        return
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE activity_logs "
+                "ADD COLUMN IF NOT EXISTS actor_full_name VARCHAR(120)"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE activity_logs "
+                "ADD COLUMN IF NOT EXISTS actor_email VARCHAR(320)"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE activity_logs ALTER COLUMN record_id DROP NOT NULL")
+        )
+
+        connection.execute(
+            text(
+                """
+                UPDATE activity_logs
+                SET actor_full_name = admin_users.full_name,
+                    actor_email = admin_users.email
+                FROM admin_users
+                WHERE activity_logs.actor_user_id = admin_users.id
+                  AND (
+                    activity_logs.actor_full_name IS NULL
+                    OR activity_logs.actor_email IS NULL
+                  )
+                """
+            )
+        )
 
 
 def get_db() -> Generator[Session, None, None]:

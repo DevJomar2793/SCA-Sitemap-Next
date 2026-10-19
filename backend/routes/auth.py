@@ -11,11 +11,17 @@ from security import (
     authenticate_admin,
     authentication_error,
     create_session_token,
+    get_current_admin,
     get_current_session,
     get_settings,
     require_trusted_origin,
 )
 from services.admin_users import DuplicateAdminEmailError, register_admin
+from services.activity_logs import (
+    AUTHENTICATION_MODULE,
+    add_activity_log,
+    commit_activity_log,
+)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -47,6 +53,16 @@ def login(
         )
 
     session_token = create_session_token(admin, settings)
+    add_activity_log(
+        db,
+        actor=admin,
+        action="LOGIN",
+        module=AUTHENTICATION_MODULE,
+        record_id=admin.id,
+        record_label=admin.email,
+        changes=[],
+    )
+    commit_activity_log(db)
     response.set_cookie(
         key=AUTH_COOKIE_NAME,
         value=session_token.value,
@@ -105,8 +121,20 @@ def register(
 )
 def logout(
     response: Response,
+    admin: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> Response:
+    add_activity_log(
+        db,
+        actor=admin,
+        action="LOGOUT",
+        module=AUTHENTICATION_MODULE,
+        record_id=admin.id,
+        record_label=admin.email,
+        changes=[],
+    )
+    commit_activity_log(db)
     response.delete_cookie(
         key=AUTH_COOKIE_NAME,
         path="/",

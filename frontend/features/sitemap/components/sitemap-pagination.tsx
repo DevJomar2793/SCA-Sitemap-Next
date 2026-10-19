@@ -30,7 +30,7 @@ export function SitemapPagination({
   }
 
   return (
-    <div className="flex flex-col gap-4 border-t border-slate-200 px-4 py-4 sm:px-5 xl:flex-row xl:items-center xl:justify-between">
+    <div className="flex flex-col gap-4 border-t border-blue-100 bg-blue-50/25 px-4 py-4 sm:px-5 xl:flex-row xl:items-center xl:justify-between">
       <p className="text-sm font-medium text-slate-600">
         Showing{" "}
         <strong className="font-semibold text-slate-900">
@@ -87,7 +87,7 @@ export function SitemapPagination({
                 onClick={() => onPageChange(item)}
                 className={`grid size-10 place-items-center rounded-xl border text-sm font-semibold transition ${
                   item === currentPage
-                    ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20"
+                    ? "border-blue-600 bg-linear-to-br from-sky-400 via-blue-500 to-blue-700 text-white shadow-sm shadow-blue-600/25"
                     : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
                 aria-current={item === currentPage ? "page" : undefined}

@@ -9,31 +9,51 @@ from sqlalchemy.orm import Session
 
 from model import ActivityLog, AdminUser
 
-ActivityAction = Literal["ADD", "UPDATE", "DELETE"]
+ActivityAction = Literal[
+    "ADD",
+    "UPDATE",
+    "DELETE",
+    "LOGIN",
+    "LOGOUT",
+    "REGISTER",
+    "IMPORT",
+]
 SITEMAP_MODULE = "Sitemap"
+AUTHENTICATION_MODULE = "Authentication"
+ADMINISTRATORS_MODULE = "Administrators"
+
+
+@dataclass(frozen=True, slots=True)
+class ActivityActorSnapshot:
+    id: int
+    full_name: str
+    email: str
 
 
 @dataclass(slots=True)
 class ActivityLogQueryResult:
-    rows: list[tuple[ActivityLog, AdminUser | None]]
+    rows: list[ActivityLog]
     total: int
-    users: list[AdminUser]
+    users: list[ActivityActorSnapshot]
+    actions: list[ActivityAction]
     modules: list[str]
 
 
 def add_activity_log(
     db: Session,
     *,
-    actor_user_id: int,
+    actor: AdminUser,
     action: ActivityAction,
     module: str,
-    record_id: int,
+    record_id: int | None,
     record_label: str,
     changes: list[dict[str, str | None]],
 ) -> ActivityLog:
     """Stage an immutable activity record in the caller's transaction."""
     activity = ActivityLog(
-        actor_user_id=actor_user_id,
+        actor_user_id=actor.id,
+        actor_full_name=actor.full_name,
+        actor_email=actor.email,
         action=action,
         module=module,
         record_id=record_id,
@@ -42,6 +62,15 @@ def add_activity_log(
     )
     db.add(activity)
     return activity
+
+
+def commit_activity_log(db: Session) -> None:
+    """Commit a standalone audit event and restore the session after failure."""
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
 
 def list_activity_logs(
@@ -62,8 +91,8 @@ def list_activity_logs(
         pattern = f"%{query.strip().lower()}%"
         conditions.append(
             or_(
-                func.lower(AdminUser.full_name).like(pattern),
-                func.lower(AdminUser.email).like(pattern),
+                func.lower(ActivityLog.actor_full_name).like(pattern),
+                func.lower(ActivityLog.actor_email).like(pattern),
                 func.lower(ActivityLog.action).like(pattern),
                 func.lower(ActivityLog.module).like(pattern),
                 func.lower(ActivityLog.record_label).like(pattern),
@@ -81,29 +110,47 @@ def list_activity_logs(
     if date_to is not None:
         conditions.append(ActivityLog.created_at < date_to)
 
-    base_query = (
-        select(ActivityLog, AdminUser)
-        .outerjoin(AdminUser, AdminUser.id == ActivityLog.actor_user_id)
-        .where(*conditions)
-    )
+    base_query = select(ActivityLog).where(*conditions)
     rows = list(
-        db.execute(
+        db.scalars(
             base_query.order_by(ActivityLog.created_at.desc(), ActivityLog.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
-        ).all()
+        )
     )
     total = db.scalar(
-        select(func.count(ActivityLog.id))
-        .outerjoin(AdminUser, AdminUser.id == ActivityLog.actor_user_id)
-        .where(*conditions)
+        select(func.count(ActivityLog.id)).where(*conditions)
     ) or 0
-    users = list(
+    user_rows = db.execute(
+        select(
+            ActivityLog.actor_user_id,
+            func.max(ActivityLog.actor_full_name),
+            func.max(ActivityLog.actor_email),
+        )
+        .where(
+            ActivityLog.actor_full_name.is_not(None),
+            ActivityLog.actor_email.is_not(None),
+        )
+        .group_by(ActivityLog.actor_user_id)
+        .order_by(
+            func.max(ActivityLog.actor_full_name),
+            func.max(ActivityLog.actor_email),
+        )
+    ).all()
+    users = [
+        ActivityActorSnapshot(
+            id=user_id,
+            full_name=full_name,
+            email=email,
+        )
+        for user_id, full_name, email in user_rows
+        if full_name is not None and email is not None
+    ]
+    actions = list(
         db.scalars(
-            select(AdminUser)
-            .join(ActivityLog, ActivityLog.actor_user_id == AdminUser.id)
+            select(ActivityLog.action)
             .distinct()
-            .order_by(AdminUser.full_name, AdminUser.email)
+            .order_by(ActivityLog.action)
         )
     )
     modules = list(
@@ -117,5 +164,6 @@ def list_activity_logs(
         rows=rows,
         total=total,
         users=users,
+        actions=actions,
         modules=modules,
     )

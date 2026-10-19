@@ -106,13 +106,15 @@ export function SitemapSearchPage() {
               type="search"
               value={query}
               onChange={(event) => {
-                setQuery(event.target.value);
+                setQuery(event.target.value.toUpperCase());
                 if (error) {
                   setError("");
                 }
               }}
               placeholder="Enter screen number (e.g. 1024)"
               autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
               className="min-w-0 flex-1 bg-transparent text-base font-medium text-slate-800 outline-none placeholder:text-slate-400 sm:text-xl"
             />
             <button

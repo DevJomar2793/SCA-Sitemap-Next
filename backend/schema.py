@@ -4,6 +4,15 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 GENERATED_LABEL_FIELDS = frozenset({"file_label", "screen_label"})
+ActivityAction = Literal[
+    "ADD",
+    "UPDATE",
+    "DELETE",
+    "LOGIN",
+    "LOGOUT",
+    "REGISTER",
+    "IMPORT",
+]
 
 
 def reject_generated_label_fields(value: Any) -> Any:
@@ -124,9 +133,9 @@ class ActivityChangeRead(BaseModel):
 class ActivityLogRead(BaseModel):
     id: int
     performed_by: ActivityActorRead | None
-    action: Literal["ADD", "UPDATE", "DELETE"]
+    action: ActivityAction
     module: str
-    record_id: int
+    record_id: int | None
     record_label: str
     changes: list[ActivityChangeRead]
     created_at: datetime
@@ -134,6 +143,7 @@ class ActivityLogRead(BaseModel):
 
 class ActivityFilterOptions(BaseModel):
     users: list[ActivityActorRead]
+    actions: list[ActivityAction]
     modules: list[str]
 
 

@@ -118,7 +118,7 @@ def create_sitemap_page(
     db.flush()
     add_activity_log(
         db,
-        actor_user_id=actor.id,
+        actor=actor,
         action="ADD",
         module=SITEMAP_MODULE,
         record_id=sitemap_page.id,
@@ -163,7 +163,7 @@ def update_sitemap_page(
     if changes:
         add_activity_log(
             db,
-            actor_user_id=actor.id,
+            actor=actor,
             action="UPDATE",
             module=SITEMAP_MODULE,
             record_id=sitemap_page.id,
@@ -182,7 +182,7 @@ def delete_sitemap_page(db: Session, page_id: int, actor: AdminUser) -> None:
     snapshot = sitemap_snapshot(sitemap_page)
     add_activity_log(
         db,
-        actor_user_id=actor.id,
+        actor=actor,
         action="DELETE",
         module=SITEMAP_MODULE,
         record_id=sitemap_page.id,
@@ -193,10 +193,49 @@ def delete_sitemap_page(db: Session, page_id: int, actor: AdminUser) -> None:
     commit_changes(db)
 
 
-def replace_sitemap_pages(db: Session, records: list[dict[str, str]]) -> None:
+def replace_sitemap_pages(
+    db: Session,
+    records: list[dict[str, str]],
+    actor: AdminUser,
+    *,
+    filename: str,
+    skipped_count: int,
+    worksheet_count: int,
+) -> None:
     """Replace all sitemap pages after a workbook has been fully validated."""
+    replaced_count = db.scalar(select(func.count()).select_from(AdminSitemap)) or 0
     db.execute(delete(AdminSitemap))
     db.add_all(AdminSitemap(**record) for record in records)
+    add_activity_log(
+        db,
+        actor=actor,
+        action="IMPORT",
+        module=SITEMAP_MODULE,
+        record_id=None,
+        record_label=filename,
+        changes=[
+            {
+                "field": "imported_count",
+                "previous_value": None,
+                "new_value": str(len(records)),
+            },
+            {
+                "field": "replaced_count",
+                "previous_value": None,
+                "new_value": str(replaced_count),
+            },
+            {
+                "field": "skipped_count",
+                "previous_value": None,
+                "new_value": str(skipped_count),
+            },
+            {
+                "field": "worksheet_count",
+                "previous_value": None,
+                "new_value": str(worksheet_count),
+            },
+        ],
+    )
     commit_changes(db)
 
 

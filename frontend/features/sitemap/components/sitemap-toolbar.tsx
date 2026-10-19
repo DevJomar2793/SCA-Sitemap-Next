@@ -52,7 +52,7 @@ export function SitemapToolbar({
   return (
     <section
       aria-label="Sitemap controls"
-      className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"
+      className="flex flex-col gap-4 rounded-2xl border border-blue-200/80 bg-white p-4 shadow-[0_18px_45px_rgba(0,13,45,0.22)] sm:p-5 xl:flex-row xl:items-center xl:justify-between"
     >
       <label className="relative block w-full xl:max-w-155">
         <Search
@@ -64,7 +64,7 @@ export function SitemapToolbar({
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Search screens, file labels, notes..."
-          className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-12 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-3 focus:ring-blue-100"
+          className="h-12 w-full rounded-xl border border-blue-200 bg-blue-50/35 pl-12 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-3 focus:ring-blue-100"
         />
         {query ? (
           <button
@@ -83,7 +83,7 @@ export function SitemapToolbar({
           <button
             type="button"
             onClick={onToggleFilter}
-            className="relative inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="relative inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
             aria-expanded={isFilterOpen}
           >
             <Filter className="size-4" />
@@ -142,7 +142,7 @@ export function SitemapToolbar({
         <button
           type="button"
           onClick={onImport}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
         >
           <FileUp className="size-4" />
           Import
@@ -151,7 +151,7 @@ export function SitemapToolbar({
           type="button"
           onClick={onExport}
           disabled={isExportDisabled}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Download className="size-4" />
           Export
@@ -159,7 +159,7 @@ export function SitemapToolbar({
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm shadow-blue-600/20 transition hover:bg-blue-700 sm:flex-none sm:px-5"
+          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-br from-sky-400 via-blue-500 to-blue-700 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:from-sky-300 hover:to-blue-700 sm:flex-none sm:px-5"
         >
           <Plus className="size-5" />
           <span className="sm:hidden">Add Page</span>

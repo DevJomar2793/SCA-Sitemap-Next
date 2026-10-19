@@ -166,7 +166,12 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
   }
 
   return (
-    <AdminShell admin={admin} title="Sitemap Pages" section="Sitemap">
+    <AdminShell
+      admin={admin}
+      title="Sitemap Pages"
+      section="Sitemap"
+      appearance="finder"
+    >
       <div className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
           <SitemapToolbar
             query={table.query}
@@ -197,7 +202,7 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
 
           <section
             aria-label="Sitemap page records"
-            className="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm"
+            className="mt-5 overflow-hidden rounded-2xl border border-blue-200/80 bg-white shadow-[0_20px_55px_rgba(0,13,45,0.25)]"
           >
             <SitemapTable
               pages={table.visiblePages}
@@ -274,7 +279,7 @@ function LoadError({
   return (
     <div
       role="alert"
-      className="mt-5 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between"
+      className="mt-5 flex flex-col gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm text-red-700 shadow-[0_14px_35px_rgba(0,13,45,0.16)] sm:flex-row sm:items-center sm:justify-between"
     >
       <span className="flex items-start gap-2">
         <AlertCircle className="mt-0.5 size-4 shrink-0" />

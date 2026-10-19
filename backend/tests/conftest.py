@@ -3,7 +3,7 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, delete
 from sqlalchemy.orm import Session, sessionmaker
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
@@ -13,7 +13,7 @@ if not TEST_DATABASE_URL:
 from config import Settings
 from database import Base, get_db
 from main import create_app
-from model import AdminUser
+from model import ActivityLog, AdminUser
 from security import hash_password
 
 TEST_ADMIN_EMAIL = "admin@example.com"
@@ -74,6 +74,9 @@ def client(database_engine) -> Generator[TestClient, None, None]:
             },
         )
         assert login_response.status_code == 200
+        with TestSessionLocal() as db:
+            db.execute(delete(ActivityLog))
+            db.commit()
         yield test_client
 
     application.dependency_overrides.clear()

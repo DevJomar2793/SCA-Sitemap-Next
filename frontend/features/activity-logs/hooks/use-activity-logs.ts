@@ -15,7 +15,7 @@ const EMPTY_PAGE: ActivityLogPage = {
   page: 1,
   page_size: 10,
   page_count: 0,
-  filter_options: { users: [], modules: [] },
+  filter_options: { users: [], actions: [], modules: [] },
 };
 
 export function useActivityLogs() {

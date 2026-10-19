@@ -33,6 +33,23 @@ const FIELD_LABELS: Record<string, string> = {
   screen_label: "Screen label",
   notes: "Notes",
   page_location: "Navigation instructions",
+  full_name: "Full name",
+  email: "Email address",
+  is_active: "Active account",
+  imported_count: "Imported pages",
+  replaced_count: "Replaced pages",
+  skipped_count: "Skipped rows",
+  worksheet_count: "Processed worksheets",
+};
+
+const ACTION_LABELS: Record<ActivityAction, string> = {
+  ADD: "Added",
+  UPDATE: "Updated",
+  DELETE: "Deleted",
+  LOGIN: "Signed in",
+  LOGOUT: "Signed out",
+  REGISTER: "Registered",
+  IMPORT: "Imported",
 };
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en-PH", {
@@ -61,11 +78,11 @@ export function ActivityLogsPage({ admin }: { admin: AdminUser }) {
         <div className="mb-6">
           <p className="text-sm font-semibold text-blue-600">System history</p>
           <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-slate-950">
-            Review sitemap activity
+            Review administrative activity
           </h2>
           <p className="mt-1.5 text-sm leading-6 text-slate-500">
-            Search and inspect the read-only record of manual additions,
-            updates, and deletions.
+            See who performed each action, which records were affected, and
+            what changed.
           </p>
         </div>
 
@@ -73,6 +90,7 @@ export function ActivityLogsPage({ admin }: { admin: AdminUser }) {
           query={logs.query}
           filters={logs.filters}
           users={logs.data.filter_options.users}
+          actions={logs.data.filter_options.actions}
           modules={logs.data.filter_options.modules}
           hasFilters={logs.hasFilters}
           onQueryChange={logs.changeQuery}
@@ -124,6 +142,7 @@ function ActivityToolbar({
   query,
   filters,
   users,
+  actions,
   modules,
   hasFilters,
   onQueryChange,
@@ -133,6 +152,7 @@ function ActivityToolbar({
   query: string;
   filters: ActivityLogFilters;
   users: Array<{ id: number; full_name: string; email: string }>;
+  actions: ActivityAction[];
   modules: string[];
   hasFilters: boolean;
   onQueryChange: (value: string) => void;
@@ -178,12 +198,14 @@ function ActivityToolbar({
         <FilterField label="Action">
           <select value={filters.action} onChange={(event) => onFilterChange("action", event.target.value)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
             <option value="">All actions</option>
-            <option value="ADD">Add</option>
-            <option value="UPDATE">Update</option>
-            <option value="DELETE">Delete</option>
+            {actions.map((action) => (
+              <option key={action} value={action}>
+                {ACTION_LABELS[action]}
+              </option>
+            ))}
           </select>
         </FilterField>
-        <FilterField label="Screen / Module">
+        <FilterField label="Module">
           <select value={filters.module} onChange={(event) => onFilterChange("module", event.target.value)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
             <option value="">All modules</option>
             {modules.map((module) => <option key={module} value={module}>{module}</option>)}
@@ -316,7 +338,11 @@ function RecordDisplay({ item }: { item: ActivityLog }) {
   return (
     <div className="min-w-0">
       <p className="truncate font-semibold text-slate-800" title={item.record_label}>{item.record_label}</p>
-      <p className="mt-0.5 text-xs font-medium text-slate-400">Record #{item.record_id}</p>
+      {item.record_id !== null ? (
+        <p className="mt-0.5 text-xs font-medium text-slate-400">
+          Record #{item.record_id}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -325,10 +351,14 @@ const actionClasses: Record<ActivityAction, string> = {
   ADD: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   UPDATE: "bg-amber-50 text-amber-700 ring-amber-200",
   DELETE: "bg-red-50 text-red-700 ring-red-200",
+  LOGIN: "bg-blue-50 text-blue-700 ring-blue-200",
+  LOGOUT: "bg-slate-100 text-slate-700 ring-slate-200",
+  REGISTER: "bg-violet-50 text-violet-700 ring-violet-200",
+  IMPORT: "bg-cyan-50 text-cyan-700 ring-cyan-200",
 };
 
 function ActionBadge({ action }: { action: ActivityAction }) {
-  return <span className={`inline-flex rounded-lg px-2.5 py-1.5 text-xs font-bold ring-1 ring-inset ${actionClasses[action]}`}>{action[0] + action.slice(1).toLowerCase()}</span>;
+  return <span className={`inline-flex rounded-lg px-2.5 py-1.5 text-xs font-bold ring-1 ring-inset ${actionClasses[action]}`}>{ACTION_LABELS[action]}</span>;
 }
 
 function ActivityDetailsPreview({
@@ -345,11 +375,17 @@ function ActivityDetailsPreview({
 
   return (
     <div className="min-w-0">
+      {item.changes.length === 0 ? (
+        <p className="text-xs leading-5 text-slate-600">
+          {item.action === "LOGIN"
+            ? "Signed in to the administration portal."
+            : "Signed out of the administration portal."}
+        </p>
+      ) : null}
       <div className="space-y-2">
         {previewChanges.map((change) => (
           <ChangePreviewLine
             key={change.field}
-            action={item.action}
             change={change}
           />
         ))}
@@ -369,12 +405,14 @@ function ActivityDetailsPreview({
   );
 }
 
-function ChangePreviewLine({ action, change }: { action: ActivityAction; change: ActivityChange }) {
+function ChangePreviewLine({ change }: { change: ActivityChange }) {
   const label = FIELD_LABELS[change.field] ?? change.field;
+  const hasPreviousValue = change.previous_value !== null;
+  const hasNewValue = change.new_value !== null;
   return (
     <p className="min-w-0 text-xs leading-5 text-slate-600">
       <span className="font-bold text-slate-700">{label}:</span>{" "}
-      {action === "UPDATE" ? (
+      {hasPreviousValue && hasNewValue ? (
         <>
           <InlineValue value={change.previous_value} tone="previous" />
           <span className="mx-1 text-slate-400" aria-hidden="true">→</span>
@@ -383,8 +421,8 @@ function ChangePreviewLine({ action, change }: { action: ActivityAction; change:
         </>
       ) : (
         <InlineValue
-          value={action === "ADD" ? change.new_value : change.previous_value}
-          tone={action === "ADD" ? "new" : "previous"}
+          value={hasNewValue ? change.new_value : change.previous_value}
+          tone={hasNewValue ? "new" : "previous"}
         />
       )}
     </p>
@@ -412,10 +450,12 @@ function ChangeDetails({ item }: { item: ActivityLog }) {
 
 function ChangeRow({ action, change }: { action: ActivityAction; change: ActivityChange }) {
   const label = FIELD_LABELS[change.field] ?? change.field;
+  const hasPreviousValue = change.previous_value !== null;
+  const hasNewValue = change.new_value !== null;
   return (
     <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5">
       <p className="text-xs font-bold text-slate-500">{label}</p>
-      {action === "UPDATE" ? (
+      {hasPreviousValue && hasNewValue ? (
         <div className="mt-2 grid gap-2 text-sm sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
           <div className="min-w-0">
             <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-red-600">Before</p>
@@ -429,10 +469,10 @@ function ChangeRow({ action, change }: { action: ActivityAction; change: Activit
         </div>
       ) : (
         <div className="mt-2">
-          <p className={`mb-1 text-[11px] font-bold uppercase tracking-wide ${action === "ADD" ? "text-emerald-600" : "text-red-600"}`}>
-            {action === "ADD" ? "Added" : "Deleted"}
+          <p className={`mb-1 text-[11px] font-bold uppercase tracking-wide ${hasNewValue ? "text-emerald-600" : "text-red-600"}`}>
+            {hasNewValue ? ACTION_LABELS[action] : "Deleted"}
           </p>
-          <Value value={action === "ADD" ? change.new_value : change.previous_value} tone={action === "ADD" ? "new" : "previous"} />
+          <Value value={hasNewValue ? change.new_value : change.previous_value} tone={hasNewValue ? "new" : "previous"} />
         </div>
       )}
     </div>
@@ -456,7 +496,7 @@ function ActivityEmptyState({ hasFilters, onClear }: { hasFilters: boolean; onCl
     <div className="flex min-h-100 flex-col items-center justify-center px-6 text-center">
       <div className="grid size-14 place-items-center rounded-2xl bg-blue-50 text-blue-700"><FileClock className="size-6" /></div>
       <h3 className="mt-4 text-lg font-bold text-slate-950">{hasFilters ? "No matching activity" : "No activity logs yet"}</h3>
-      <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">{hasFilters ? "Try changing or clearing the active filters." : "Manual sitemap additions, updates, and deletions will appear here."}</p>
+      <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">{hasFilters ? "Try changing or clearing the active filters." : "Administrator sign-ins, account registrations, sitemap changes, and imports will appear here."}</p>
       {hasFilters ? <button type="button" onClick={onClear} className="mt-5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Clear filters</button> : null}
     </div>
   );

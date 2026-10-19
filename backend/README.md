@@ -78,7 +78,7 @@ when the application starts against a new database.
 | `PATCH` | `/api/v1/update-admin-page/{id}` | Update selected fields |
 | `DELETE` | `/api/v1/delete-admin-page/{id}` | Delete a page |
 | `POST` | `/api/v1/import-sitemap-pages` | Replace pages from an Excel workbook |
-| `GET` | `/api/v1/activity-logs` | Search immutable manual CRUD history |
+| `GET` | `/api/v1/activity-logs` | Search immutable administrative history |
 
 These dashboard endpoints require an authenticated administrator. The public
 `GET /api/v1/search-sitemap-pages?q={identifier}` endpoint remains available
@@ -108,17 +108,23 @@ reach the screen. The API field name is retained for compatibility.
 
 ## Activity logs
 
-Successful manual sitemap Add, Update, and Delete operations create immutable
-activity records in the same database transaction as the underlying change.
-Each entry retains the affected record ID and label, the current administrator
-ID, a field-level snapshot or before/after diff, and a UTC timestamp. Workbook
-imports are intentionally not audited.
+Successful administrator sign-ins, sign-outs, registrations, sitemap Add,
+Update, Delete, and Excel import operations create immutable activity records.
+Each entry retains the administrator's ID, name, and email as they appeared at
+the time of the action, plus the affected record, field-level details, and UTC
+timestamp. Registration, sitemap changes, and imports save their audit entry in
+the same database transaction as the underlying change.
+
+Routine reads, public searches, session checks, failed sign-ins, failed
+validation, and no-op updates are not recorded. Import events contain one
+summary instead of one entry per imported row.
 
 `GET /api/v1/activity-logs` supports `q`, `user_id`, `action`, `module`,
-`date_from`, `date_to`, `page`, and `page_size`. `date_from` is inclusive and
-`date_to` is exclusive. Results are ordered newest first and include filter
-options plus pagination totals. There are no public endpoints for modifying or
-deleting activity history.
+`date_from`, `date_to`, `page`, and `page_size`. Supported actions are `ADD`,
+`UPDATE`, `DELETE`, `LOGIN`, `LOGOUT`, `REGISTER`, and `IMPORT`. `date_from` is
+inclusive and `date_to` is exclusive. Results are ordered newest first and
+include user, action, and module filter options plus pagination totals. There
+are no endpoints for modifying or deleting activity history.
 
 ## Excel import
 

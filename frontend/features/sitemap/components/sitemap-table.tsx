@@ -176,7 +176,7 @@ export function SitemapTable({
       <div className="hidden overflow-x-auto lg:block">
         <table className="w-full min-w-280 border-collapse text-left">
           <thead>
-            <tr className="bg-slate-50/85 text-xs font-bold uppercase tracking-[0.04em] text-slate-500">
+            <tr className="bg-linear-to-r from-blue-50 via-sky-50/70 to-white text-xs font-bold uppercase tracking-[0.04em] text-slate-600">
               <th className="w-14 px-5 py-4">#</th>
               <th className="w-24 px-5 py-4">Alpha</th>
               <th className="w-28 px-5 py-4">Screen #</th>
@@ -194,7 +194,7 @@ export function SitemapTable({
               pages.map((page, index) => (
                 <tr
                   key={page.id}
-                  className="border-t border-slate-200 transition hover:bg-blue-50/25"
+                  className="border-t border-blue-100 transition hover:bg-blue-50/55"
                 >
                   <td className="px-5 py-4.5 font-semibold text-slate-500">
                     {startIndex + index + 1}
@@ -266,7 +266,7 @@ export function SitemapTable({
           : pages.map((page, index) => (
               <article
                 key={page.id}
-                className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="relative rounded-2xl border border-blue-200 bg-white p-4 shadow-[0_10px_30px_rgba(30,64,175,0.1)]"
               >
                 <div className="flex items-start gap-3">
                   <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-50 text-sm font-bold text-blue-700">

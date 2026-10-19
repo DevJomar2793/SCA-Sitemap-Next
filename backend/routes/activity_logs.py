@@ -1,12 +1,10 @@
 from datetime import datetime, timezone
 from math import ceil
-from typing import Literal
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from database import get_db
-from schema import ActivityLogPageRead
+from schema import ActivityAction, ActivityLogPageRead
 from security import get_current_admin
 from services.activity_logs import list_activity_logs
 
@@ -22,7 +20,7 @@ router = APIRouter(prefix="/activity-logs", tags=["activity logs"])
 def get_activity_logs(
     q: str | None = Query(default=None, max_length=200),
     user_id: int | None = Query(default=None, ge=1),
-    action: Literal["ADD", "UPDATE", "DELETE"] | None = None,
+    action: ActivityAction | None = None,
     module: str | None = Query(default=None, max_length=80),
     date_from: datetime | None = None,
     date_to: datetime | None = None,
@@ -46,11 +44,12 @@ def get_activity_logs(
             "id": activity.id,
             "performed_by": (
                 {
-                    "id": actor.id,
-                    "full_name": actor.full_name,
-                    "email": actor.email,
+                    "id": activity.actor_user_id,
+                    "full_name": activity.actor_full_name,
+                    "email": activity.actor_email,
                 }
-                if actor is not None
+                if activity.actor_full_name is not None
+                and activity.actor_email is not None
                 else None
             ),
             "action": activity.action,
@@ -64,7 +63,7 @@ def get_activity_logs(
                 else activity.created_at
             ),
         }
-        for activity, actor in result.rows
+        for activity in result.rows
     ]
     return {
         "items": items,
@@ -77,6 +76,7 @@ def get_activity_logs(
                 {"id": user.id, "full_name": user.full_name, "email": user.email}
                 for user in result.users
             ],
+            "actions": result.actions,
             "modules": result.modules,
         },
     }
