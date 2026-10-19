@@ -45,6 +45,7 @@ export function LoginForm({ sessionExpired = false }: { sessionExpired?: boolean
 
   return (
     <AuthPageShell
+      variant="hero"
       title="Administrator sign in"
       description="Use your administrator account to manage sitemap pages."
       footer={
@@ -107,7 +108,7 @@ export function LoginForm({ sessionExpired = false }: { sessionExpired?: boolean
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-sky-400 via-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/35 transition hover:from-sky-300 hover:to-blue-700 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
           {!isSubmitting ? (
