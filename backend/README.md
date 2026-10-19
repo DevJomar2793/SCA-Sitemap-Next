@@ -45,7 +45,10 @@ python -m pip install -r requirements-dev.txt
 uvicorn main:app --reload
 ```
 
-The backend loads `backend/.env` automatically at startup.
+The backend loads `backend/.env` automatically at startup. Database settings
+use the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_DB`, `DATABASE_USER`, and
+`DATABASE_PASSWORD` names shown in the example file. Existing deployments that
+use the equivalent `POSTGRES_*` names continue to work as a fallback.
 
 The health check is available at `http://127.0.0.1:8000/api/v1/health`.
 Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
@@ -142,11 +145,15 @@ The service reads these environment variables:
 | `APP_NAME` | `SCA Sitemap API` |
 | `APP_VERSION` | `0.1.0` |
 | `CORS_ORIGINS` | `http://localhost:3000` |
-| `POSTGRES_HOST` | Required PostgreSQL host, such as `localhost` |
-| `POSTGRES_PORT` | Required PostgreSQL port, usually `5432` |
-| `POSTGRES_DB` | Required PostgreSQL database name |
-| `POSTGRES_USER` | Required PostgreSQL username |
-| `POSTGRES_PASSWORD` | Required PostgreSQL password |
+| `DATABASE_HOST` | Required PostgreSQL host, such as `localhost` |
+| `DATABASE_PORT` | Required PostgreSQL port, usually `5432` |
+| `DATABASE_DB` | Required PostgreSQL database name |
+| `DATABASE_USER` | Required PostgreSQL username |
+| `DATABASE_PASSWORD` | Required PostgreSQL password |
+
+For compatibility, the backend also accepts `POSTGRES_HOST`, `POSTGRES_PORT`,
+`POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` when the corresponding
+`DATABASE_*` variable is not set.
 
 Set `CORS_ORIGINS` to a comma-separated list when multiple browser origins are
 required.
@@ -181,10 +188,10 @@ Authentication failures return a machine-readable `detail.code`, including
 `session_expired`, `not_authenticated`, `invalid_session`, `inactive_account`,
 or `incorrect_credentials`.
 
-Only a signed-in administrator can register another administrator:
+Anyone with access to the application can register an administrator account:
 
 ```bash
-curl -b cookies.txt -H "Content-Type: application/json" \
+curl -H "Content-Type: application/json" \
   -d '{
     "email":"second.admin@example.com",
     "full_name":"Second Administrator",
@@ -193,9 +200,10 @@ curl -b cookies.txt -H "Content-Type: application/json" \
   http://localhost:8000/api/v1/auth/register
 ```
 
-Registration returns an active account but does not create or replace the
-creator's session. Emails are case-insensitive, passwords must contain 5–128
-characters, and an existing email returns `409 Conflict`.
+Registration returns an active account but does not create a session. The new
+administrator signs in after registration. Emails are case-insensitive,
+passwords must contain 5–128 characters, and an existing email returns
+`409 Conflict`.
 
 Log out when finished:
 

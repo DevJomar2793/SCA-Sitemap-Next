@@ -17,7 +17,6 @@ import {
   getSession,
   getStoredAuthenticatedSession,
 } from "../api";
-import { RegisterForm } from "./register-form";
 import type { AdminSession } from "../types";
 
 const MAXIMUM_TIMEOUT_MS = 2_147_000_000;
@@ -25,7 +24,7 @@ const MAXIMUM_TIMEOUT_MS = 2_147_000_000;
 export function AdminPageGate({
   page,
 }: {
-  page: "activity-logs" | "dashboard" | "register" | "sitemap";
+  page: "activity-logs" | "dashboard" | "sitemap";
 }) {
   const [session, setSession] = useState<AdminSession | null>(null);
   const [verificationError, setVerificationError] = useState("");
@@ -155,6 +154,5 @@ export function AdminPageGate({
 
   if (page === "dashboard") return <AdminOverview admin={session} />;
   if (page === "activity-logs") return <ActivityLogsPage admin={session} />;
-  if (page === "register") return <RegisterForm />;
   return <SitemapDashboard admin={session} />;
 }

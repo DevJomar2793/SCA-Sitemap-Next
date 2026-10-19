@@ -9,7 +9,7 @@ DEFAULT_APP_VERSION = "0.1.0"
 DEFAULT_CORS_ORIGINS = ("http://localhost:3000",)
 DEFAULT_AUTH_SESSION_MINUTES = 30
 
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 
 def parse_boolean(value: str | None, *, default: bool = False) -> bool:
@@ -51,11 +51,14 @@ class Settings:
             app_name=os.getenv("APP_NAME", DEFAULT_APP_NAME),
             app_version=os.getenv("APP_VERSION", DEFAULT_APP_VERSION),
             cors_origins=cors_origins,
-            postgres_host=os.getenv("POSTGRES_HOST"),
-            postgres_port=os.getenv("POSTGRES_PORT"),
-            postgres_db=os.getenv("POSTGRES_DB"),
-            postgres_user=os.getenv("POSTGRES_USER"),
-            postgres_password=os.getenv("POSTGRES_PASSWORD"),
+            postgres_host=os.getenv("DATABASE_HOST", os.getenv("POSTGRES_HOST")),
+            postgres_port=os.getenv("DATABASE_PORT", os.getenv("POSTGRES_PORT")),
+            postgres_db=os.getenv("DATABASE_DB", os.getenv("POSTGRES_DB")),
+            postgres_user=os.getenv("DATABASE_USER", os.getenv("POSTGRES_USER")),
+            postgres_password=os.getenv(
+                "DATABASE_PASSWORD",
+                os.getenv("POSTGRES_PASSWORD"),
+            ),
             auth_secret_key=os.getenv("AUTH_SECRET_KEY"),
             auth_cookie_secure=parse_boolean(os.getenv("AUTH_COOKIE_SECURE")),
             auth_session_minutes=int(

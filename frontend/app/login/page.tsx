@@ -10,8 +10,13 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reason?: string }>;
+  searchParams: Promise<{ reason?: string; registered?: string }>;
 }) {
-  const { reason } = await searchParams;
-  return <LoginForm sessionExpired={reason === "expired"} />;
+  const { reason, registered } = await searchParams;
+  return (
+    <LoginForm
+      sessionExpired={reason === "expired"}
+      registrationSuccessful={registered === "1"}
+    />
+  );
 }

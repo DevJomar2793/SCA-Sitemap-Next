@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { AdminPageGate } from "@/features/auth/components/dashboard-gate";
+import { RegisterForm } from "@/features/auth/components/register-form";
 
 export const metadata: Metadata = {
   title: "Create Administrator Account | SCA Sitemap",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function RegisterPage() {
-  return <AdminPageGate page="register" />;
+  return <RegisterForm />;
 }

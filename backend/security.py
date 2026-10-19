@@ -137,9 +137,7 @@ def bootstrap_admin(db: Session, settings: Settings) -> AdminUser | None:
         if not value or not value.strip()
     ]
     if missing:
-        raise RuntimeError(
-            "The first administrator requires: " + ", ".join(missing)
-        )
+        return None
 
     assert settings.admin_email is not None
     assert settings.admin_password is not None

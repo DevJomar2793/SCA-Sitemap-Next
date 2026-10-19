@@ -184,7 +184,7 @@ def test_register_validates_account_fields(
     assert client.post(REGISTER_PATH, json=payload).status_code == 422
 
 
-def test_unauthenticated_registration_is_rejected(
+def test_unauthenticated_admin_can_register(
     client: TestClient,
 ) -> None:
     client.cookies.clear()
@@ -198,13 +198,17 @@ def test_unauthenticated_registration_is_rejected(
         },
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 201
     assert response.json() == {
-        "detail": {
-            "code": "not_authenticated",
-            "message": "Not authenticated",
-        }
+        "id": 2,
+        "email": "new@example.com",
+        "full_name": "New Administrator",
+        "is_active": True,
+        "created_at": response.json()["created_at"],
     }
+    assert "password" not in response.text
+    assert "set-cookie" not in response.headers
+    assert AUTH_COOKIE_NAME not in client.cookies
 
 
 @pytest.mark.parametrize(

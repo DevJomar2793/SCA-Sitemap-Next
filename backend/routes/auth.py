@@ -89,7 +89,6 @@ def get_session(
 )
 def register(
     payload: AdminRegister,
-    _: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> AdminUser:
     try:

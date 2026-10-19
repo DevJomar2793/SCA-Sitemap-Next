@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
+import { ArrowRight, CheckCircle2, LockKeyhole, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -9,7 +9,13 @@ import { login, storeAuthenticatedSession } from "../api";
 import { AuthFormField } from "./auth-form-field";
 import { AuthPageShell } from "./auth-page-shell";
 
-export function LoginForm({ sessionExpired = false }: { sessionExpired?: boolean }) {
+export function LoginForm({
+  sessionExpired = false,
+  registrationSuccessful = false,
+}: {
+  sessionExpired?: boolean;
+  registrationSuccessful?: boolean;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,6 +57,15 @@ export function LoginForm({ sessionExpired = false }: { sessionExpired?: boolean
       footer={
         <div className="mt-6 space-y-2 text-center text-sm text-slate-500">
           <p>
+            Need an administrator account?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-blue-700 hover:text-blue-900"
+            >
+              Create account
+            </Link>
+          </p>
+          <p>
             Need to find a screen?{" "}
             <Link
               href="/"
@@ -63,6 +78,15 @@ export function LoginForm({ sessionExpired = false }: { sessionExpired?: boolean
       }
     >
       <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+        {registrationSuccessful ? (
+          <p
+            role="status"
+            className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm font-medium text-emerald-700"
+          >
+            <CheckCircle2 className="size-4.5 shrink-0" aria-hidden="true" />
+            Account created successfully. You can now sign in.
+          </p>
+        ) : null}
         {sessionExpired ? (
           <p
             role="status"

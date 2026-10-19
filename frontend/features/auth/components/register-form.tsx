@@ -1,7 +1,8 @@
 "use client";
 
-import { CheckCircle2, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { ArrowRight, LockKeyhole, Mail, UserRound } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { register } from "../api";
@@ -12,12 +13,12 @@ const MINIMUM_PASSWORD_LENGTH = 5;
 const MAXIMUM_PASSWORD_LENGTH = 128;
 
 export function RegisterForm() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -36,20 +37,15 @@ export function RegisterForm() {
     }
 
     setError("");
-    setSuccessMessage("");
     setIsSubmitting(true);
 
     try {
-      const admin = await register({
+      await register({
         full_name: normalizedName,
         email: normalizedEmail,
         password,
       });
-      setSuccessMessage(`${admin.full_name} can now sign in as an administrator.`);
-      setFullName("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+      router.replace("/login?registered=1");
     } catch (registrationError) {
       setError(
         registrationError instanceof Error
@@ -63,16 +59,17 @@ export function RegisterForm() {
 
   return (
     <AuthPageShell
+      variant="hero"
       title="Create administrator account"
-      description="Create an account for another administrator."
+      description="Create your administrator account to manage sitemap pages."
       footer={
         <p className="mt-6 text-center text-sm text-slate-500">
-          Only signed-in administrators can create accounts. {" "}
+          Already have an administrator account?{" "}
           <Link
-            href="/dashboard"
+            href="/login"
             className="font-semibold text-blue-700 hover:text-blue-900"
           >
-            Back to dashboard
+            Sign in
           </Link>
         </p>
       }
@@ -139,22 +136,15 @@ export function RegisterForm() {
           </p>
         ) : null}
 
-        {successMessage ? (
-          <p
-            role="status"
-            className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm font-medium text-emerald-700"
-          >
-            <CheckCircle2 className="size-4.5 shrink-0" aria-hidden="true" />
-            {successMessage}
-          </p>
-        ) : null}
-
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-sky-400 via-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/35 transition hover:from-sky-300 hover:to-blue-700 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
         >
           {isSubmitting ? "Creating account..." : "Create account"}
+          {!isSubmitting ? (
+            <ArrowRight className="size-4" aria-hidden="true" />
+          ) : null}
         </button>
       </form>
     </AuthPageShell>
