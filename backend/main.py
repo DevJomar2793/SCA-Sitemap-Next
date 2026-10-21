@@ -1,3 +1,4 @@
+from sys import prefix
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -51,12 +52,12 @@ def create_app(
             allow_headers=["*"],
         )
 
-    api_router = APIRouter()
+    api_router = APIRouter(prefix="/api/v1")
     api_router.include_router(health_router)
     api_router.include_router(auth_router)
     api_router.include_router(admin_pages_router)
     api_router.include_router(activity_logs_router)
-    application.include_router(api_router, prefix="/api/v1")
+    application.include_router(api_router)
     return application
 
 
