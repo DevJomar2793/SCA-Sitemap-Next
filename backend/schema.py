@@ -1,23 +1,52 @@
 from datetime import datetime
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
+GENERATED_LABEL_FIELDS = frozenset({"file_label", "screen_label"})
+ActivityAction = Literal[
+    "ADD",
+    "UPDATE",
+    "DELETE",
+    "LOGIN",
+    "LOGOUT",
+    "REGISTER",
+    "IMPORT",
+]
 
-class AdminSitemapFields(BaseModel):
+
+def reject_generated_label_fields(value: Any) -> Any:
+    if isinstance(value, dict):
+        submitted_fields = GENERATED_LABEL_FIELDS.intersection(value)
+        if submitted_fields:
+            field_names = ", ".join(sorted(submitted_fields))
+            raise ValueError(
+                f"System-generated fields must not be provided: {field_names}"
+            )
+    return value
+
+
+class AdminSitemapWritableFields(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     alpha: str = Field(min_length=1)
     screen_number: str = Field(min_length=1)
     screen_type: str = Field(min_length=1)
     screen_description: str = Field(min_length=1)
-    file_label: str = Field(min_length=1)
-    screen_label: str = Field(min_length=1)
     notes: str = Field(min_length=1)
     page_location: str = Field(min_length=1)
 
 
-class AdminSitemapCreate(AdminSitemapFields):
-    pass
+class AdminSitemapFields(AdminSitemapWritableFields):
+    file_label: str = Field(min_length=1)
+    screen_label: str = Field(min_length=1)
+
+
+class AdminSitemapCreate(AdminSitemapWritableFields):
+    @model_validator(mode="before")
+    @classmethod
+    def reject_generated_labels(cls, value: Any) -> Any:
+        return reject_generated_label_fields(value)
 
 
 class AdminSitemapUpdate(BaseModel):
@@ -27,10 +56,13 @@ class AdminSitemapUpdate(BaseModel):
     screen_number: str | None = Field(default=None, min_length=1)
     screen_type: str | None = Field(default=None, min_length=1)
     screen_description: str | None = Field(default=None, min_length=1)
-    file_label: str | None = Field(default=None, min_length=1)
-    screen_label: str | None = Field(default=None, min_length=1)
     notes: str | None = Field(default=None, min_length=1)
     page_location: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_generated_labels(cls, value: Any) -> Any:
+        return reject_generated_label_fields(value)
 
     @model_validator(mode="after")
     def validate_changes(self) -> "AdminSitemapUpdate":
@@ -80,3 +112,45 @@ class AdminUserRead(BaseModel):
     full_name: str
     is_active: bool
     created_at: datetime
+
+
+class AdminSessionRead(AdminUserRead):
+    expires_at: datetime
+
+
+class ActivityActorRead(BaseModel):
+    id: int
+    full_name: str
+    email: EmailStr
+
+
+class ActivityChangeRead(BaseModel):
+    field: str
+    previous_value: str | None
+    new_value: str | None
+
+
+class ActivityLogRead(BaseModel):
+    id: int
+    performed_by: ActivityActorRead | None
+    action: ActivityAction
+    module: str
+    record_id: int | None
+    record_label: str
+    changes: list[ActivityChangeRead]
+    created_at: datetime
+
+
+class ActivityFilterOptions(BaseModel):
+    users: list[ActivityActorRead]
+    actions: list[ActivityAction]
+    modules: list[str]
+
+
+class ActivityLogPageRead(BaseModel):
+    items: list[ActivityLogRead]
+    total: int
+    page: int
+    page_size: int
+    page_count: int
+    filter_options: ActivityFilterOptions

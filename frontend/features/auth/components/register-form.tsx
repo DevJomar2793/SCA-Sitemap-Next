@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { login, register, storeAuthenticatedAdmin } from "../api";
+import { register } from "../api";
 import { AuthFormField } from "./auth-form-field";
 import { AuthPageShell } from "./auth-page-shell";
 
@@ -27,7 +27,7 @@ export function RegisterForm() {
     const normalizedEmail = email.trim();
 
     if (!normalizedName || !normalizedEmail || !password || !confirmPassword) {
-      setError("Complete all fields to create your account.");
+      setError("Complete all fields to create the administrator account.");
       return;
     }
 
@@ -45,14 +45,12 @@ export function RegisterForm() {
         email: normalizedEmail,
         password,
       });
-      const admin = await login({ email: normalizedEmail, password });
-      storeAuthenticatedAdmin(admin);
-      router.replace("/dashboard");
+      router.replace("/login?registered=1");
     } catch (registrationError) {
       setError(
         registrationError instanceof Error
           ? registrationError.message
-          : "Unable to create your account. Please try again.",
+          : "Unable to create the administrator account. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -61,11 +59,12 @@ export function RegisterForm() {
 
   return (
     <AuthPageShell
+      variant="hero"
       title="Create administrator account"
-      description="Register to access the sitemap administration dashboard."
+      description="Create your administrator account to manage sitemap pages."
       footer={
         <p className="mt-6 text-center text-sm text-slate-500">
-          Already have an account?{" "}
+          Already have an administrator account?{" "}
           <Link
             href="/login"
             className="font-semibold text-blue-700 hover:text-blue-900"
@@ -85,7 +84,7 @@ export function RegisterForm() {
           autoFocus
           required
           disabled={isSubmitting}
-          placeholder="Your full name"
+          placeholder="Administrator's full name"
           icon={<UserRound className="size-4.5" aria-hidden="true" />}
         />
         <AuthFormField
@@ -140,7 +139,7 @@ export function RegisterForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-sky-400 via-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/35 transition hover:from-sky-300 hover:to-blue-700 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
         >
           {isSubmitting ? "Creating account..." : "Create account"}
           {!isSubmitting ? (

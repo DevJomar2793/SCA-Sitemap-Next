@@ -1,9 +1,11 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, func
+from typing import Any
+
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.database import Base
+from database import Base
 
 
 class AdminSitemap(Base):
@@ -19,14 +21,13 @@ class AdminSitemap(Base):
     notes: Mapped[str] = mapped_column(String, nullable=False)
     page_location: Mapped[str] = mapped_column(String, nullable=False)
 
-    # SQLite sets both dates on create and refreshes updated_at on changes.
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.current_timestamp(),
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
@@ -52,13 +53,35 @@ class AdminUser(Base):
         server_default="1",
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.current_timestamp(),
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
+    )
+
+
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    actor_user_id: Mapped[int] = mapped_column(
+        ForeignKey("admin_users.id"), nullable=False, index=True
+    )
+    actor_full_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    actor_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    action: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    module: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    record_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    record_label: Mapped[str] = mapped_column(String(512), nullable=False)
+    changes: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.current_timestamp(),
+        index=True,
     )

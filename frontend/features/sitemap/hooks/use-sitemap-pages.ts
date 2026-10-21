@@ -13,7 +13,7 @@ import {
 import type {
   SitemapImportResult,
   SitemapPage,
-  SitemapPageInput,
+  SitemapPageWriteInput,
 } from "../types";
 
 export function useSitemapPages() {
@@ -53,7 +53,7 @@ export function useSitemapPages() {
     return () => controller.abort();
   }, [fetchPages]);
 
-  async function createPage(values: SitemapPageInput): Promise<SitemapPage> {
+  async function createPage(values: SitemapPageWriteInput): Promise<SitemapPage> {
     const created = await createSitemapPage(values);
     setPages((current) => [...current, created].sort((a, b) => a.id - b.id));
     return created;
@@ -61,7 +61,7 @@ export function useSitemapPages() {
 
   async function updatePage(
     id: number,
-    values: SitemapPageInput,
+    values: SitemapPageWriteInput,
   ): Promise<SitemapPage> {
     const updated = await updateSitemapPage(id, values);
     setPages((current) =>

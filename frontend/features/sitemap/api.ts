@@ -3,7 +3,7 @@ import { requestFormData, requestJson } from "@/lib/api-client";
 import type {
   SitemapImportResult,
   SitemapPage,
-  SitemapPageInput,
+  SitemapPageWriteInput,
 } from "./types";
 
 export function listSitemapPages(signal?: AbortSignal): Promise<SitemapPage[]> {
@@ -21,7 +21,7 @@ export function searchSitemapPages(query: string): Promise<SitemapPage[]> {
 }
 
 export function createSitemapPage(
-  payload: SitemapPageInput,
+  payload: SitemapPageWriteInput,
 ): Promise<SitemapPage> {
   return requestJson<SitemapPage>("/add-admin-page", {
     method: "POST",
@@ -31,7 +31,7 @@ export function createSitemapPage(
 
 export function updateSitemapPage(
   id: number,
-  payload: SitemapPageInput,
+  payload: SitemapPageWriteInput,
 ): Promise<SitemapPage> {
   return requestJson<SitemapPage>(`/update-admin-page/${id}`, {
     method: "PATCH",

@@ -9,6 +9,11 @@ export type SitemapPageInput = {
   page_location: string;
 };
 
+export type SitemapPageWriteInput = Omit<
+  SitemapPageInput,
+  "file_label" | "screen_label"
+>;
+
 export type SitemapPage = SitemapPageInput & {
   id: number;
   created_at: string;
@@ -72,29 +77,22 @@ export const SITEMAP_PAGE_FIELDS: Array<{
   {
     name: "file_label",
     label: "File label",
-    placeholder: "e.g. A-03",
-  },
-  {
-    name: "screen_label",
-    label: "Screen label",
-    placeholder: "e.g. A-03-Dashboard",
-  },
-  {
-    name: "page_location",
-    label: "Navigation instructions",
-    placeholder: "e.g. Dashboard → Users → Master List",
-    multiline: true,
+    placeholder: "Generated from Alpha and Screen number",
   },
   {
     name: "screen_description",
     label: "Screen description",
     placeholder: "Describe what this screen is used for",
-    multiline: true,
   },
   {
-    name: "notes",
-    label: "Notes",
-    placeholder: "e.g. Active Screen",
+    name: "screen_label",
+    label: "Screen label",
+    placeholder: "Generated from File label and Screen description",
+  },
+  {
+    name: "page_location",
+    label: "Navigation instructions",
+    placeholder: "e.g. Dashboard → Users → Master List",
     multiline: true,
   },
 ];

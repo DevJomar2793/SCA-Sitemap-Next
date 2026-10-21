@@ -1,13 +1,10 @@
 """Tests for the admin page CRUD endpoints and database table."""
 
-from pathlib import Path
 from time import sleep
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, inspect, text
-
-from app.database import Base, migrate_legacy_table
+from sqlalchemy import inspect
 
 CREATE_PATH = "/api/v1/add-admin-page"
 LIST_PATH = "/api/v1/get-admin-pages"
@@ -21,18 +18,16 @@ VALID_PAYLOAD = {
     "screen_number": "001",
     "screen_type": "Landing",
     "screen_description": "Main landing screen",
-    "file_label": "landing.tsx",
-    "screen_label": "Landing page",
     "notes": "Initial version",
     "page_location": "/",
 }
 
 
-def test_admin_sitemap_table_has_expected_columns(tmp_path: Path) -> None:
-    test_engine = create_engine(f"sqlite:///{(tmp_path / 'schema.db').as_posix()}")
-    Base.metadata.create_all(bind=test_engine)
-
-    columns = {column["name"] for column in inspect(test_engine).get_columns("page_list")}
+def test_admin_sitemap_table_has_expected_columns(database_engine) -> None:
+    columns = {
+        column["name"]
+        for column in inspect(database_engine).get_columns("page_list")
+    }
 
     assert columns == {
         "id",
@@ -47,52 +42,6 @@ def test_admin_sitemap_table_has_expected_columns(tmp_path: Path) -> None:
         "created_at",
         "updated_at",
     }
-    test_engine.dispose()
-
-
-def test_legacy_table_is_renamed_without_losing_records(tmp_path: Path) -> None:
-    test_engine = create_engine(f"sqlite:///{(tmp_path / 'legacy.db').as_posix()}")
-    with test_engine.begin() as connection:
-        connection.exec_driver_sql(
-            """
-            CREATE TABLE admin_sitemap (
-                id INTEGER PRIMARY KEY,
-                alpha VARCHAR NOT NULL,
-                screen_number VARCHAR NOT NULL,
-                screen_type VARCHAR NOT NULL,
-                screen_description VARCHAR NOT NULL,
-                file_label VARCHAR NOT NULL,
-                screen_label VARCHAR NOT NULL,
-                notes VARCHAR NOT NULL,
-                page_location VARCHAR NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
-            )
-            """
-        )
-        connection.execute(
-            text(
-                """
-                INSERT INTO admin_sitemap (
-                    id, alpha, screen_number, screen_type, screen_description,
-                    file_label, screen_label, notes, page_location
-                ) VALUES (
-                    1, 'A', '001', 'Landing', 'Main landing screen',
-                    'landing.tsx', 'Landing page', 'Initial version', '/'
-                )
-                """
-            )
-        )
-
-    migrate_legacy_table(test_engine)
-
-    assert inspect(test_engine).has_table("page_list")
-    assert not inspect(test_engine).has_table("admin_sitemap")
-    with test_engine.connect() as connection:
-        assert connection.execute(text("SELECT COUNT(*) FROM page_list")).scalar_one() == 1
-    test_engine.dispose()
-
-
 def test_crud_flow(client: TestClient) -> None:
     create_response = client.post(CREATE_PATH, json=VALID_PAYLOAD)
 
@@ -100,6 +49,8 @@ def test_crud_flow(client: TestClient) -> None:
     created = create_response.json()
     assert created["id"] == 1
     assert created["screen_number"] == "001"
+    assert created["file_label"] == "A-001"
+    assert created["screen_label"] == "A-001-Main landing screen"
     assert created["created_at"] is not None
     assert created["updated_at"] is not None
 
@@ -120,6 +71,8 @@ def test_crud_flow(client: TestClient) -> None:
     updated = update_response.json()
     assert updated["notes"] == "Updated notes"
     assert updated["alpha"] == created["alpha"]
+    assert updated["file_label"] == "A-001"
+    assert updated["screen_label"] == "A-001-Main landing screen"
     assert updated["created_at"] == created["created_at"]
     assert updated["updated_at"] > created["updated_at"]
 
@@ -166,18 +119,74 @@ def test_missing_records_return_404(client: TestClient) -> None:
     assert client.delete(DELETE_PATH.format(id=999)).status_code == 404
 
 
+def test_create_trims_sources_before_generating_labels(client: TestClient) -> None:
+    response = client.post(
+        CREATE_PATH,
+        json={
+            **VALID_PAYLOAD,
+            "alpha": " a ",
+            "screen_number": " 003 ",
+            "screen_description": " Main screen ",
+        },
+    )
+
+    assert response.status_code == 201
+    created = response.json()
+    assert created["alpha"] == "a"
+    assert created["screen_number"] == "003"
+    assert created["file_label"] == "a-003"
+    assert created["screen_label"] == "a-003-Main screen"
+
+
+def test_source_updates_regenerate_both_labels(client: TestClient) -> None:
+    created = client.post(CREATE_PATH, json=VALID_PAYLOAD).json()
+
+    response = client.patch(
+        UPDATE_PATH.format(id=created["id"]),
+        json={
+            "alpha": "MG",
+            "screen_number": "04",
+            "screen_description": "Manager list",
+        },
+    )
+
+    assert response.status_code == 200
+    updated = response.json()
+    assert updated["file_label"] == "MG-04"
+    assert updated["screen_label"] == "MG-04-Manager list"
+
+
+@pytest.mark.parametrize("field", ["file_label", "screen_label"])
+@pytest.mark.parametrize(
+    ("method", "path", "payload"),
+    [
+        ("post", CREATE_PATH, VALID_PAYLOAD),
+        ("patch", UPDATE_PATH.format(id=1), {"notes": "Updated"}),
+    ],
+)
+def test_write_requests_reject_generated_label_fields(
+    client: TestClient,
+    field: str,
+    method: str,
+    path: str,
+    payload: dict[str, str],
+) -> None:
+    response = client.request(method, path, json={**payload, field: "override"})
+
+    assert response.status_code == 422
+    assert "System-generated fields must not be provided" in response.text
+
+
 def test_search_by_screen_number_returns_all_alpha_matches(
     client: TestClient,
 ) -> None:
     second_payload = {
         **VALID_PAYLOAD,
         "alpha": "B",
-        "screen_label": "Second matching page",
     }
     unmatched_payload = {
         **VALID_PAYLOAD,
         "screen_number": "002",
-        "screen_label": "Different page",
     }
     for payload in (VALID_PAYLOAD, second_payload, unmatched_payload):
         assert client.post(CREATE_PATH, json=payload).status_code == 201

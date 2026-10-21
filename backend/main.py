@@ -1,13 +1,16 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.router import api_router
-from app.config import Settings
-from app.database import SessionLocal, init_db
-from app.security import bootstrap_admin
+from config import Settings
+from database import SessionLocal, init_db
+from routes.activity_logs import router as activity_logs_router
+from routes.admin_pages import router as admin_pages_router
+from routes.auth import router as auth_router
+from routes.health import router as health_router
+from security import bootstrap_admin
 
 
 def create_database_lifespan(settings: Settings):
@@ -48,6 +51,11 @@ def create_app(
             allow_headers=["*"],
         )
 
+    api_router = APIRouter(prefix="/api/v1")
+    api_router.include_router(health_router)
+    api_router.include_router(auth_router)
+    api_router.include_router(admin_pages_router)
+    api_router.include_router(activity_logs_router)
     application.include_router(api_router)
     return application
 

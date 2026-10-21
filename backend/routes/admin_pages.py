@@ -13,17 +13,17 @@ from fastapi import (
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from app.database import get_db
-from app.model import AdminSitemap
-from app.schema import (
+from database import get_db
+from model import AdminSitemap, AdminUser
+from schema import (
     AdminSitemapCreate,
     AdminSitemapRead,
     AdminSitemapUpdate,
     SitemapImportRead,
 )
-from app.security import get_current_admin, require_trusted_origin
-from app.services.excel_import import WorkbookImportError, parse_sitemap_workbook
-from app.services.sitemap_pages import (
+from security import get_current_admin, require_trusted_origin
+from services.excel_import import WorkbookImportError, parse_sitemap_workbook
+from services.sitemap_pages import (
     SitemapPageNotFoundError,
     create_sitemap_page,
     delete_sitemap_page,
@@ -50,16 +50,16 @@ def sitemap_page_not_found_error() -> HTTPException:
     response_model=AdminSitemapRead,
     status_code=status.HTTP_201_CREATED,
     dependencies=[
-        Depends(get_current_admin),
         Depends(require_trusted_origin),
     ],
     summary="Create an admin page",
 )
 def create_admin_page(
     payload: AdminSitemapCreate,
+    admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> AdminSitemap:
-    return create_sitemap_page(db, payload)
+    return create_sitemap_page(db, payload, admin)
 
 
 @router.get(
@@ -95,13 +95,13 @@ def search_sitemap_pages(
     "/import-sitemap-pages",
     response_model=SitemapImportRead,
     dependencies=[
-        Depends(get_current_admin),
         Depends(require_trusted_origin),
     ],
     summary="Replace sitemap pages from an Excel workbook",
 )
 async def import_sitemap_pages(
     file: UploadFile = File(...),
+    admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> SitemapImportRead:
     filename = file.filename or ""
@@ -127,7 +127,14 @@ async def import_sitemap_pages(
             detail=str(error),
         ) from error
 
-    replace_sitemap_pages(db, result.records)
+    replace_sitemap_pages(
+        db,
+        result.records,
+        admin,
+        filename=filename,
+        skipped_count=result.skipped_count,
+        worksheet_count=result.worksheet_count,
+    )
 
     return SitemapImportRead(
         imported_count=len(result.records),
@@ -157,7 +164,6 @@ def get_admin_page(
     "/update-admin-page/{id}",
     response_model=AdminSitemapRead,
     dependencies=[
-        Depends(get_current_admin),
         Depends(require_trusted_origin),
     ],
     summary="Update an admin page",
@@ -165,10 +171,11 @@ def get_admin_page(
 def update_admin_page(
     id: int,
     payload: AdminSitemapUpdate,
+    admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> AdminSitemap:
     try:
-        return update_sitemap_page(db, id, payload)
+        return update_sitemap_page(db, id, payload, admin)
     except SitemapPageNotFoundError:
         raise sitemap_page_not_found_error() from None
 
@@ -177,17 +184,17 @@ def update_admin_page(
     "/delete-admin-page/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[
-        Depends(get_current_admin),
         Depends(require_trusted_origin),
     ],
     summary="Delete an admin page",
 )
 def delete_admin_page(
     id: int,
+    admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> Response:
     try:
-        delete_sitemap_page(db, id)
+        delete_sitemap_page(db, id, admin)
     except SitemapPageNotFoundError:
         raise sitemap_page_not_found_error() from None
     return Response(status_code=status.HTTP_204_NO_CONTENT)

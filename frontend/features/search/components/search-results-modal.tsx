@@ -72,7 +72,7 @@ export function SearchResultsModal({
 
   return (
     <div
-      className={`fixed inset-0 z-80 grid place-items-center bg-slate-950/55 p-3 backdrop-blur-[3px] sm:p-5 ${
+      className={`fixed inset-0 z-80 grid place-items-center bg-[#020a20]/80 p-3 backdrop-blur-md sm:p-5 ${
         isClosing
           ? "animate-dialog-backdrop-out"
           : "animate-dialog-backdrop-in"
@@ -88,22 +88,27 @@ export function SearchResultsModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="search-results-modal-title"
-        className={`flex max-h-[calc(100dvh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.32)] sm:max-h-[calc(100dvh-2.5rem)] ${
+        className={`relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-blue-300/35 bg-[#041f57] shadow-[0_32px_100px_rgba(0,10,40,0.65),0_0_50px_rgba(56,189,248,0.12)] sm:max-h-[calc(100dvh-2.5rem)] ${
           isClosing ? "animate-dialog-out" : "animate-dialog-in"
         }`}
       >
-        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-7 sm:py-5">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_at_35%_0%,rgba(56,189,248,0.25),transparent_60%)]"
+          aria-hidden="true"
+        />
+
+        <header className="relative flex shrink-0 items-start justify-between gap-4 border-b border-blue-300/25 bg-blue-950/20 px-5 py-4 sm:px-7 sm:py-5">
           <div className="flex min-w-0 items-start gap-3">
-            <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700">
+            <div className="grid size-11 shrink-0 place-items-center rounded-2xl border border-cyan-200/30 bg-cyan-300/15 text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.16)]">
               <Monitor className="size-5" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-600">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-200">
                 Search results
               </p>
               <h2
                 id="search-results-modal-title"
-                className="mt-1 truncate text-lg font-bold tracking-[-0.02em] text-slate-950 sm:text-xl"
+                className="mt-1 truncate text-lg font-bold tracking-[-0.02em] text-white sm:text-xl"
               >
                 {results.length} {results.length === 1 ? "screen" : "screens"}{" "}
                 found for “{query}”
@@ -113,21 +118,21 @@ export function SearchResultsModal({
           <button
             type="button"
             onClick={requestClose}
-            className="grid size-9 shrink-0 place-items-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            className="grid size-9 shrink-0 place-items-center rounded-xl border border-white/10 text-blue-100 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
             aria-label="Close search results"
           >
             <X className="size-5" />
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:overflow-hidden">
+        <div className="relative min-h-0 flex-1 overflow-y-auto bg-slate-50 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:overflow-hidden">
           {results.length > 1 ? (
             <>
               <aside
                 aria-label="Matching screens"
-                className="hidden min-h-0 overflow-y-auto border-r border-slate-200 bg-slate-50/80 p-3 lg:block"
+                className="hidden min-h-0 overflow-y-auto border-r border-blue-300/20 bg-[#06235c] p-3 lg:block"
               >
-                <p className="px-2 pb-2 pt-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
+                <p className="px-2 pb-2 pt-1 text-xs font-bold uppercase tracking-[0.12em] text-cyan-200/80">
                   Select a record
                 </p>
                 <div className="space-y-1.5">
@@ -141,15 +146,15 @@ export function SearchResultsModal({
                         aria-pressed={isActive}
                         className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
                           isActive
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "text-slate-700 hover:bg-white"
+                            ? "bg-gradient-to-r from-sky-400 via-blue-500 to-blue-700 text-white shadow-lg shadow-blue-950/30"
+                            : "text-blue-50 hover:bg-white/10"
                         }`}
                       >
                         <span
                           className={`grid size-8 shrink-0 place-items-center rounded-lg text-xs font-bold ${
                             isActive
-                              ? "bg-white/16 text-white"
-                              : "bg-blue-50 text-blue-700"
+                              ? "bg-white/20 text-white"
+                              : "bg-blue-400/15 text-cyan-200"
                           }`}
                         >
                           {page.alpha || "—"}
@@ -160,7 +165,7 @@ export function SearchResultsModal({
                           </span>
                           <span
                             className={`mt-0.5 block truncate text-xs ${
-                              isActive ? "text-blue-100" : "text-slate-500"
+                              isActive ? "text-blue-100" : "text-blue-200/70"
                             }`}
                           >
                             {displayValue(page.screen_label)}
@@ -175,14 +180,14 @@ export function SearchResultsModal({
                 </div>
               </aside>
 
-              <label className="sticky top-0 z-10 block border-b border-slate-200 bg-white px-5 py-4 lg:hidden">
-                <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.1em] text-slate-500">
+              <label className="sticky top-0 z-10 block border-b border-blue-300/25 bg-[#06235c] px-5 py-4 lg:hidden">
+                <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.1em] text-cyan-200">
                   Select a record
                 </span>
                 <select
                   value={selectedPage.id}
                   onChange={(event) => setSelectedId(Number(event.target.value))}
-                  className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-100"
+                  className="h-11 w-full rounded-xl border border-blue-200/40 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-400 focus:ring-3 focus:ring-cyan-300/25"
                 >
                   {results.map((page) => (
                     <option key={page.id} value={page.id}>
@@ -196,25 +201,25 @@ export function SearchResultsModal({
 
           <div
             key={selectedPage.id}
-            className={`animate-search-result min-h-0 px-5 py-6 sm:px-7 lg:overflow-y-auto lg:px-8 ${
+            className={`animate-search-result min-h-0 bg-slate-50 px-4 py-5 sm:px-6 sm:py-6 lg:overflow-y-auto lg:px-7 ${
               results.length === 1 ? "lg:col-span-2" : ""
             }`}
           >
-            <div className="mb-7 flex flex-col gap-3 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="relative mb-5 overflow-hidden rounded-2xl border border-blue-300/30 bg-[radial-gradient(ellipse_at_80%_0%,rgba(56,189,248,0.24),transparent_48%),linear-gradient(135deg,#052b70_0%,#031942_100%)] p-5 shadow-lg shadow-blue-950/10 sm:flex sm:items-start sm:justify-between sm:gap-4 sm:p-6">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-600">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-200">
                   Screen {recordName(selectedPage)}
                 </p>
-                <h3 className="mt-1.5 text-2xl font-bold tracking-[-0.03em] text-slate-950">
+                <h3 className="mt-1.5 text-2xl font-bold tracking-[-0.03em] text-white">
                   {displayValue(selectedPage.screen_label)}
                 </h3>
               </div>
-              <span className="self-start rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
+              <span className="mt-3 inline-flex self-start rounded-full border border-cyan-200/30 bg-cyan-300/15 px-3 py-1.5 text-xs font-bold text-cyan-100 sm:mt-0">
                 {displayValue(selectedPage.screen_type)}
               </span>
             </div>
 
-            <div className="space-y-8">
+            <div className="grid gap-4 xl:grid-cols-2">
               <DetailSection
                 icon={Fingerprint}
                 title="Record identity"
@@ -275,15 +280,15 @@ export function SearchResultsModal({
           </div>
         </div>
 
-        <footer className="flex shrink-0 items-center justify-between gap-4 border-t border-slate-200 bg-slate-50/80 px-5 py-3.5 sm:px-7">
-          <p className="hidden items-center gap-2 text-xs text-slate-500 sm:flex">
+        <footer className="relative flex shrink-0 items-center justify-between gap-4 border-t border-blue-300/25 bg-[#041f57] px-5 py-3.5 sm:px-7">
+          <p className="hidden items-center gap-2 text-xs text-blue-100/75 sm:flex">
             <Info className="size-3.5" aria-hidden="true" />
             Read-only sitemap record
           </p>
           <button
             type="button"
             onClick={requestClose}
-            className="ml-auto rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            className="ml-auto rounded-xl bg-gradient-to-r from-sky-400 via-blue-500 to-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-950/25 transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
           >
             Close
           </button>
@@ -307,18 +312,22 @@ function DetailSection({
   }>;
 }) {
   return (
-    <section>
-      <div className="mb-4 flex items-center gap-2 text-slate-900">
-        <Icon className="size-4.5 text-blue-600" aria-hidden="true" />
+    <section className="rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_10px_30px_rgba(15,44,92,0.06)] sm:p-5">
+      <div className="mb-4 flex items-center gap-3 text-slate-900">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-700">
+          <Icon className="size-4.5" aria-hidden="true" />
+        </span>
         <h4 className="text-sm font-bold">{title}</h4>
       </div>
-      <dl className="grid gap-x-7 gap-y-5 sm:grid-cols-2">
+      <dl className="grid gap-3 sm:grid-cols-2">
         {fields.map((field) => (
           <div
             key={field.label}
-            className={field.wide ? "sm:col-span-2" : ""}
+            className={`rounded-xl border border-slate-100 bg-slate-50/80 px-3.5 py-3 ${
+              field.wide ? "sm:col-span-2" : ""
+            }`}
           >
-            <dt className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.1em] text-slate-400">
+            <dt className="flex items-center gap-1.5 text-[0.68rem] font-bold uppercase tracking-[0.1em] text-blue-600">
               {field.label === "File label" ? (
                 <Tag className="size-3.5" aria-hidden="true" />
               ) : field.label === "Screen description" ? (

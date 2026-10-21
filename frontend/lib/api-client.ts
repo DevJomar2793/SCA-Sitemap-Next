@@ -6,11 +6,16 @@ export class ApiRequestError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    public readonly code?: string,
   ) {
     super(message);
     this.name = "ApiRequestError";
   }
 }
+
+export const AUTHENTICATION_FAILURE_EVENT = "sca:authentication-failure";
+
+export type AuthenticationFailureReason = "expired" | "invalid";
 
 export async function requestJson<T>(
   path: string,
@@ -43,10 +48,9 @@ export async function requestFormData<T>(
 
 async function readResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    throw new ApiRequestError(
-      await readErrorMessage(response),
-      response.status,
-    );
+    const error = await readError(response);
+    notifyAuthenticationFailure(response.status, error.code);
+    throw new ApiRequestError(error.message, response.status, error.code);
   }
 
   if (response.status === 204) {
@@ -56,29 +60,42 @@ async function readResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-async function readErrorMessage(response: Response): Promise<string> {
+async function readError(
+  response: Response,
+): Promise<{ message: string; code?: string }> {
+  const fallback = `Request failed with status ${response.status}`;
+
   try {
-    return getErrorMessage(
-      await response.json(),
-      `Request failed with status ${response.status}`,
-    );
+    return getErrorDetails(await response.json(), fallback);
   } catch {
-    return `Request failed with status ${response.status}`;
+    return { message: fallback };
   }
 }
 
-function getErrorMessage(payload: unknown, fallback: string): string {
+function getErrorDetails(
+  payload: unknown,
+  fallback: string,
+): { message: string; code?: string } {
   if (!payload || typeof payload !== "object" || !("detail" in payload)) {
-    return fallback;
+    return { message: fallback };
   }
 
   const detail = payload.detail;
   if (typeof detail === "string") {
-    return detail;
+    return { message: detail };
+  }
+
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    const message = "message" in detail ? detail.message : null;
+    const code = "code" in detail ? detail.code : null;
+    return {
+      message: typeof message === "string" ? message : fallback,
+      code: typeof code === "string" ? code : undefined,
+    };
   }
 
   if (!Array.isArray(detail)) {
-    return fallback;
+    return { message: fallback };
   }
 
   const messages = detail
@@ -90,5 +107,23 @@ function getErrorMessage(payload: unknown, fallback: string): string {
     })
     .filter(Boolean);
 
-  return messages.length > 0 ? messages.join(". ") : fallback;
+  return { message: messages.length > 0 ? messages.join(". ") : fallback };
+}
+
+function notifyAuthenticationFailure(status: number, code?: string): void {
+  if (status !== 401 || code === "incorrect_credentials") {
+    return;
+  }
+
+  const reason: AuthenticationFailureReason =
+    code === "session_expired" ? "expired" : "invalid";
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent<AuthenticationFailureReason>(
+        AUTHENTICATION_FAILURE_EVENT,
+        { detail: reason },
+      ),
+    );
+  }
 }

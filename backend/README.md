@@ -42,10 +42,13 @@ python -m pip install -r requirements-dev.txt
 ## Run the API
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn main:app --reload
 ```
 
-The backend loads `backend/.env` automatically at startup.
+The backend loads `backend/.env` automatically at startup. Database settings
+use the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_DB`, `DATABASE_USER`, and
+`DATABASE_PASSWORD` names shown in the example file. Existing deployments that
+use the equivalent `POSTGRES_*` names continue to work as a fallback.
 
 The health check is available at `http://127.0.0.1:8000/api/v1/health`.
 Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
@@ -53,20 +56,19 @@ Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
 ## Project structure
 
 ```text
-app/
-├── api/routes/       # HTTP endpoints
-├── config.py         # Environment settings
-├── database.py       # SQLite connection and sessions
-├── model.py          # SQLAlchemy database model
-├── schema.py         # Request and response validation
-├── services/         # Excel parsing and other business logic
-└── main.py           # FastAPI application setup
+main.py                # FastAPI application setup
+routes/                # HTTP endpoints
+config.py              # Environment settings
+database.py            # PostgreSQL connection and sessions
+model.py               # SQLAlchemy database models
+schema.py              # Request and response validation
+services/              # Excel parsing and sitemap operations
 ```
 
 ## Admin page CRUD
 
-The API stores sitemap records in `sitemap.db`, created automatically in the
-backend directory when the application starts.
+The API stores sitemap records in PostgreSQL. Tables are created automatically
+when the application starts against a new database.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -76,13 +78,17 @@ backend directory when the application starts.
 | `PATCH` | `/api/v1/update-admin-page/{id}` | Update selected fields |
 | `DELETE` | `/api/v1/delete-admin-page/{id}` | Delete a page |
 | `POST` | `/api/v1/import-sitemap-pages` | Replace pages from an Excel workbook |
+| `GET` | `/api/v1/activity-logs` | Search immutable administrative history |
 
 These dashboard endpoints require an authenticated administrator. The public
 `GET /api/v1/search-sitemap-pages?q={identifier}` endpoint remains available
 without login.
 
-`created_at` and `updated_at` are managed automatically and must not be included
-in create or update requests.
+`file_label`, `screen_label`, `created_at`, and `updated_at` are managed
+automatically and must not be included in create or update requests. File labels
+use `{alpha}-{screen_number}` and screen labels use
+`{file_label}-{screen_description}`. Requests that include either generated
+label receive a `422 Unprocessable Entity` response.
 
 Example create request:
 
@@ -92,8 +98,6 @@ Example create request:
   "screen_number": "001",
   "screen_type": "Landing",
   "screen_description": "Main landing screen",
-  "file_label": "landing.tsx",
-  "screen_label": "Landing page",
   "notes": "Initial version",
   "page_location": "Dashboard → Users → Master List"
 }
@@ -101,6 +105,26 @@ Example create request:
 
 `page_location` contains concise navigation instructions describing how to
 reach the screen. The API field name is retained for compatibility.
+
+## Activity logs
+
+Successful administrator sign-ins, sign-outs, registrations, sitemap Add,
+Update, Delete, and Excel import operations create immutable activity records.
+Each entry retains the administrator's ID, name, and email as they appeared at
+the time of the action, plus the affected record, field-level details, and UTC
+timestamp. Registration, sitemap changes, and imports save their audit entry in
+the same database transaction as the underlying change.
+
+Routine reads, public searches, session checks, failed sign-ins, failed
+validation, and no-op updates are not recorded. Import events contain one
+summary instead of one entry per imported row.
+
+`GET /api/v1/activity-logs` supports `q`, `user_id`, `action`, `module`,
+`date_from`, `date_to`, `page`, and `page_size`. Supported actions are `ADD`,
+`UPDATE`, `DELETE`, `LOGIN`, `LOGOUT`, `REGISTER`, and `IMPORT`. `date_from` is
+inclusive and `date_to` is exclusive. Results are ordered newest first and
+include user, action, and module filter options plus pagination totals. There
+are no endpoints for modifying or deleting activity history.
 
 ## Excel import
 
@@ -120,14 +144,22 @@ existing records unchanged.
 
 ## Configuration
 
-The service reads these optional environment variables:
+The service reads these environment variables:
 
 | Variable | Default |
 | --- | --- |
 | `APP_NAME` | `SCA Sitemap API` |
 | `APP_VERSION` | `0.1.0` |
 | `CORS_ORIGINS` | `http://localhost:3000` |
-| `DATABASE_PATH` | `backend/sitemap.db` |
+| `DATABASE_HOST` | Required PostgreSQL host, such as `localhost` |
+| `DATABASE_PORT` | Required PostgreSQL port, usually `5432` |
+| `DATABASE_DB` | Required PostgreSQL database name |
+| `DATABASE_USER` | Required PostgreSQL username |
+| `DATABASE_PASSWORD` | Required PostgreSQL password |
+
+For compatibility, the backend also accepts `POSTGRES_HOST`, `POSTGRES_PORT`,
+`POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` when the corresponding
+`DATABASE_*` variable is not set.
 
 Set `CORS_ORIGINS` to a comma-separated list when multiple browser origins are
 required.
@@ -150,7 +182,19 @@ cookie for authenticated requests:
 curl -b cookies.txt http://localhost:8000/api/v1/get-admin-pages
 ```
 
-Anyone can register a full administrator account:
+Login responses include an `expires_at` UTC timestamp. Browser clients can
+validate an existing cookie and retrieve the same administrator/session data
+with:
+
+```bash
+curl -b cookies.txt http://localhost:8000/api/v1/auth/session
+```
+
+Authentication failures return a machine-readable `detail.code`, including
+`session_expired`, `not_authenticated`, `invalid_session`, `inactive_account`,
+or `incorrect_credentials`.
+
+Anyone with access to the application can register an administrator account:
 
 ```bash
 curl -H "Content-Type: application/json" \
@@ -162,13 +206,10 @@ curl -H "Content-Type: application/json" \
   http://localhost:8000/api/v1/auth/register
 ```
 
-Registration returns an active account but does not create a session. Browser
-clients register and then log in to receive the session cookie. Emails are
-case-insensitive, passwords must contain 5–128 characters, and an existing
-email returns `409 Conflict`.
-
-> Registration is public by design. Every successful registration receives full
-> administrator access to dashboard endpoints.
+Registration returns an active account but does not create a session. The new
+administrator signs in after registration. Emails are case-insensitive,
+passwords must contain 5–128 characters, and an existing email returns
+`409 Conflict`.
 
 Log out when finished:
 
@@ -194,5 +235,8 @@ Authentication configuration:
 ## Tests
 
 ```bash
-pytest
+TEST_DATABASE_URL=postgresql+psycopg://sca_sitemap:password@localhost:5432/sca_sitemap_test pytest
 ```
+
+`TEST_DATABASE_URL` must point to a dedicated PostgreSQL database. The test
+suite clears its tables before and after each test.

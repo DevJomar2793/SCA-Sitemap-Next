@@ -31,13 +31,17 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Features
 
 - Responsive sitemap table and mobile record cards
+- Dashboard overview with catalogue metrics, breakdowns, and recent updates
+- Read-only administrative audit trail with actor snapshots, event filters,
+  expandable changes, and pagination
 - Public screen-number finder with detailed navigation results
 - Search and filters
 - Client-side pagination and CSV export
 - Excel workbook import with drag-and-drop validation
 - Create, view, edit, and delete dialogs
 - Loading, empty, success, and error states
-- Administrator login, public registration, protected dashboard access, and sign out
+- Administrator login, public registration, protected dashboard access,
+  automatic session-expiry logout, and sign out
 
 ## Project map
 
@@ -47,12 +51,16 @@ app/
 ├── page.tsx                   # Public screen finder at /
 ├── login/page.tsx             # Administrator sign-in at /login
 ├── register/page.tsx          # Public administrator registration at /register
-└── dashboard/page.tsx         # Protected sitemap administration at /dashboard
+├── dashboard/page.tsx         # Protected sitemap overview at /dashboard
+├── activity-logs/page.tsx     # Protected audit history at /activity-logs
+└── sitemap/page.tsx           # Protected sitemap administration at /sitemap
 components/
 └── layout/
     └── sidebar.tsx            # Shared desktop and mobile navigation
 features/
 ├── auth/                      # Authentication API, types, hooks, and forms
+├── activity-logs/             # Audit history API, state, types, and UI
+├── dashboard/                 # Overview metrics and dashboard UI
 ├── search/                    # Screen finder UI and read-only results modal
 └── sitemap/
     ├── api.ts                 # Sitemap-only requests to backend endpoints
@@ -72,7 +80,9 @@ The feature follows a simple data flow:
 
 Authentication follows the same feature ownership: `features/auth/api.ts`
 contains session requests, `features/auth/types.ts` owns account data, and the
-dashboard gate checks the current session before rendering protected content.
+dashboard gate verifies the HTTP-only session before rendering protected
+content, schedules expiration, and handles authentication failures from API
+requests.
 
 ### Where to make common changes
 

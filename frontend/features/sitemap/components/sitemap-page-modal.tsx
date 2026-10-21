@@ -11,14 +11,20 @@ import {
   type SitemapFormMode,
   type SitemapPage,
   type SitemapPageInput,
+  type SitemapPageWriteInput,
 } from "../types";
 
 type SitemapPageModalProps = {
   mode: SitemapFormMode;
   page?: SitemapPage;
   onClose: () => void;
-  onSubmit: (values: SitemapPageInput) => Promise<void>;
+  onSubmit: (values: SitemapPageWriteInput) => Promise<void>;
 };
+
+const GENERATED_LABEL_FIELDS = new Set<keyof SitemapPageInput>([
+  "file_label",
+  "screen_label",
+]);
 
 const modeCopy: Record<
   SitemapFormMode,
@@ -39,19 +45,37 @@ const modeCopy: Record<
 };
 
 function getInitialValues(page?: SitemapPage): SitemapPageInput {
-  if (!page) {
-    return EMPTY_SITEMAP_PAGE;
-  }
+  const values = page
+    ? {
+        alpha: page.alpha.toUpperCase(),
+        screen_number: page.screen_number,
+        screen_type: page.screen_type,
+        screen_description: page.screen_description,
+        file_label: page.file_label,
+        screen_label: page.screen_label,
+        notes: page.notes,
+        page_location: page.page_location,
+      }
+    : EMPTY_SITEMAP_PAGE;
+
+  return { ...values, ...generateLabels(values) };
+}
+
+function generateLabels(
+  values: Pick<
+    SitemapPageInput,
+    "alpha" | "screen_number" | "screen_description"
+  >,
+): Pick<SitemapPageInput, "file_label" | "screen_label"> {
+  const alpha = values.alpha.trim().toUpperCase();
+  const screenNumber = values.screen_number.trim();
+  const screenDescription = values.screen_description.trim();
+  const fileLabel = alpha && screenNumber ? `${alpha}-${screenNumber}` : "";
 
   return {
-    alpha: page.alpha,
-    screen_number: page.screen_number,
-    screen_type: page.screen_type,
-    screen_description: page.screen_description,
-    file_label: page.file_label,
-    screen_label: page.screen_label,
-    notes: page.notes,
-    page_location: page.page_location,
+    file_label: fileLabel,
+    screen_label:
+      fileLabel && screenDescription ? `${fileLabel}-${screenDescription}` : "",
   };
 }
 
@@ -86,7 +110,14 @@ export function SitemapPageModal({
   useDialogKeyboard(dialogRef, requestClose);
 
   function updateField(name: keyof SitemapPageInput, value: string) {
-    setValues((current) => ({ ...current, [name]: value }));
+    setValues((current) => {
+      const nextValues = {
+        ...current,
+        [name]:
+          name === "alpha" ? value.replace(/\d/g, "").toUpperCase() : value,
+      };
+      return { ...nextValues, ...generateLabels(nextValues) };
+    });
     setErrors((current) => ({ ...current, [name]: undefined }));
   }
 
@@ -99,7 +130,7 @@ export function SitemapPageModal({
     const nextErrors: Partial<Record<keyof SitemapPageInput, string>> = {};
 
     SITEMAP_PAGE_FIELDS.forEach((field) => {
-      if (!normalized[field.name]) {
+      if (!GENERATED_LABEL_FIELDS.has(field.name) && !normalized[field.name]) {
         nextErrors[field.name] = `${field.label} is required`;
       }
     });
@@ -113,7 +144,14 @@ export function SitemapPageModal({
     setSubmitError("");
 
     try {
-      await onSubmit(normalized);
+      await onSubmit({
+        alpha: normalized.alpha,
+        screen_number: normalized.screen_number,
+        screen_type: normalized.screen_type,
+        screen_description: normalized.screen_description,
+        notes: normalized.notes,
+        page_location: normalized.page_location,
+      });
       completeClose();
     } catch (error) {
       setSubmitError(
@@ -155,8 +193,13 @@ export function SitemapPageModal({
           <form onSubmit={handleSubmit}>
             <div className="grid max-h-[68vh] gap-x-5 gap-y-4 overflow-y-auto px-5 py-6 sm:grid-cols-2 sm:px-7">
               {SITEMAP_PAGE_FIELDS.map((field) => {
+                const isGeneratedLabel = GENERATED_LABEL_FIELDS.has(field.name);
                 const commonClasses = `w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-3 focus:ring-blue-100 ${
                   errors[field.name] ? "border-red-400" : "border-slate-300"
+                } ${
+                  isGeneratedLabel
+                    ? "cursor-not-allowed bg-slate-50 text-slate-600"
+                    : ""
                 }`;
 
                 return (
@@ -183,10 +226,14 @@ export function SitemapPageModal({
                     ) : (
                       <input
                         value={values[field.name]}
-                        onChange={(event) =>
-                          updateField(field.name, event.target.value)
+                        onChange={
+                          isGeneratedLabel
+                            ? undefined
+                            : (event) =>
+                                updateField(field.name, event.target.value)
                         }
                         placeholder={field.placeholder}
+                        readOnly={isGeneratedLabel}
                         className={commonClasses}
                       />
                     )}

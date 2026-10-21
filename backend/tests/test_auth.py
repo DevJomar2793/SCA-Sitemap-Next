@@ -1,16 +1,15 @@
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 import jwt
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import Settings
-from app.database import Base, get_db
-from app.model import AdminUser
-from app.security import (
+from config import Settings
+from database import get_db
+from model import AdminUser
+from security import (
     AUTH_COOKIE_NAME,
     JWT_ALGORITHM,
     bootstrap_admin,
@@ -27,6 +26,7 @@ LOGIN_PATH = "/api/v1/auth/login"
 REGISTER_PATH = "/api/v1/auth/register"
 PROTECTED_PATH = "/api/v1/get-admin-pages"
 LOGOUT_PATH = "/api/v1/auth/logout"
+SESSION_PATH = "/api/v1/auth/session"
 
 
 def log_in(client: TestClient, *, email: str, password: str):
@@ -52,7 +52,11 @@ def test_login_sets_http_only_session_cookie(client: TestClient) -> None:
         "full_name": TEST_ADMIN_NAME,
         "is_active": True,
         "created_at": response.json()["created_at"],
+        "expires_at": response.json()["expires_at"],
     }
+    expires_at = datetime.fromisoformat(response.json()["expires_at"])
+    assert timedelta(minutes=29) < expires_at - datetime.now(timezone.utc)
+    assert expires_at - datetime.now(timezone.utc) <= timedelta(minutes=30)
     cookie = response.headers["set-cookie"].lower()
     assert f"{AUTH_COOKIE_NAME}=" in cookie
     assert "httponly" in cookie
@@ -62,6 +66,10 @@ def test_login_sets_http_only_session_cookie(client: TestClient) -> None:
 
     protected_response = client.get(PROTECTED_PATH)
     assert protected_response.status_code == 200
+
+    session_response = client.get(SESSION_PATH)
+    assert session_response.status_code == 200
+    assert session_response.json() == response.json()
 
 
 def test_authenticated_admin_can_register_another_admin(
@@ -176,7 +184,7 @@ def test_register_validates_account_fields(
     assert client.post(REGISTER_PATH, json=payload).status_code == 422
 
 
-def test_public_registration_creates_an_active_administrator(
+def test_unauthenticated_admin_can_register(
     client: TestClient,
 ) -> None:
     client.cookies.clear()
@@ -191,9 +199,16 @@ def test_public_registration_creates_an_active_administrator(
     )
 
     assert response.status_code == 201
-    assert response.json()["email"] == "new@example.com"
-    assert response.json()["full_name"] == "New Administrator"
-    assert response.json()["is_active"] is True
+    assert response.json() == {
+        "id": 2,
+        "email": "new@example.com",
+        "full_name": "New Administrator",
+        "is_active": True,
+        "created_at": response.json()["created_at"],
+    }
+    assert "password" not in response.text
+    assert "set-cookie" not in response.headers
+    assert AUTH_COOKIE_NAME not in client.cookies
 
 
 @pytest.mark.parametrize(
@@ -213,7 +228,12 @@ def test_invalid_credentials_return_generic_401(
     response = log_in(client, email=email, password=password)
 
     assert response.status_code == 401
-    assert response.json() == {"detail": "Incorrect email or password"}
+    assert response.json() == {
+        "detail": {
+            "code": "incorrect_credentials",
+            "message": "Incorrect email or password",
+        }
+    }
     assert AUTH_COOKIE_NAME not in client.cookies
 
 
@@ -224,6 +244,15 @@ def test_logout_clears_session_cookie(client: TestClient) -> None:
     assert response.content == b""
     assert AUTH_COOKIE_NAME not in client.cookies
     assert client.get(PROTECTED_PATH).status_code == 401
+
+
+def test_session_endpoint_requires_authentication(client: TestClient) -> None:
+    client.cookies.clear()
+
+    response = client.get(SESSION_PATH)
+
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "not_authenticated"
 
 
 @pytest.mark.parametrize("token", ["not-a-token", ""])
@@ -238,7 +267,8 @@ def test_invalid_or_missing_session_returns_401(
     response = client.get(PROTECTED_PATH)
 
     assert response.status_code == 401
-    assert response.json() == {"detail": "Not authenticated"}
+    expected_code = "invalid_session" if token else "not_authenticated"
+    assert response.json()["detail"]["code"] == expected_code
 
 
 def test_expired_session_returns_401(client: TestClient) -> None:
@@ -254,7 +284,9 @@ def test_expired_session_returns_401(client: TestClient) -> None:
     )
     client.cookies.set(AUTH_COOKIE_NAME, token)
 
-    assert client.get(PROTECTED_PATH).status_code == 401
+    response = client.get(PROTECTED_PATH)
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "session_expired"
 
 
 def test_disabled_admin_session_returns_401(client: TestClient) -> None:
@@ -269,10 +301,12 @@ def test_disabled_admin_session_returns_401(client: TestClient) -> None:
     finally:
         db_generator.close()
 
-    assert client.get(PROTECTED_PATH).status_code == 401
+    response = client.get(PROTECTED_PATH)
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "inactive_account"
 
 
-def test_current_admin_endpoint_is_removed(client: TestClient) -> None:
+def test_legacy_current_admin_endpoint_remains_removed(client: TestClient) -> None:
     assert client.get("/api/v1/auth/me").status_code == 404
 
 
@@ -336,9 +370,7 @@ def test_untrusted_origins_cannot_make_state_changes(
     assert response.json() == {"detail": "Request origin is not allowed"}
 
 
-def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
-    engine = create_engine(f"sqlite:///{(tmp_path / 'auth.db').as_posix()}")
-    Base.metadata.create_all(bind=engine)
+def test_bootstrap_creates_hashed_admin_once(database_engine) -> None:
     settings = Settings(
         auth_secret_key=TEST_AUTH_SECRET,
         admin_email=f"  {TEST_ADMIN_EMAIL.upper()} ",
@@ -346,7 +378,7 @@ def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
         admin_name=TEST_ADMIN_NAME,
     )
 
-    with Session(engine) as db:
+    with Session(database_engine) as db:
         created = bootstrap_admin(db, settings)
         assert created is not None
         assert created.email == TEST_ADMIN_EMAIL
@@ -356,7 +388,6 @@ def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
         assert bootstrap_admin(db, settings) is None
         assert len(list(db.scalars(select(AdminUser)))) == 1
 
-    engine.dispose()
 
 
 @pytest.mark.parametrize(
@@ -383,14 +414,9 @@ def test_bootstrap_creates_hashed_admin_once(tmp_path: Path) -> None:
     ],
 )
 def test_bootstrap_rejects_insecure_configuration(
-    tmp_path: Path,
+    database_engine,
     settings: Settings,
     message: str,
 ) -> None:
-    engine = create_engine(f"sqlite:///{(tmp_path / 'invalid.db').as_posix()}")
-    Base.metadata.create_all(bind=engine)
-
-    with Session(engine) as db, pytest.raises(RuntimeError, match=message):
+    with Session(database_engine) as db, pytest.raises(RuntimeError, match=message):
         bootstrap_admin(db, settings)
-
-    engine.dispose()

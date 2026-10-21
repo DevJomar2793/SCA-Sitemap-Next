@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 from uvicorn.importer import import_from_string
 
-from app.config import Settings
-from app.main import app, create_app
+from config import Settings
+from main import app, create_app
 
 FRONTEND_ORIGIN = "http://localhost:3000"
 UNCONFIGURED_ORIGIN = "https://example.com"
@@ -71,4 +71,4 @@ def test_unconfigured_origin_is_not_allowed() -> None:
 
 
 def test_standard_asgi_target_resolves() -> None:
-    assert import_from_string("app.main:app") is app
+    assert import_from_string("main:app") is app

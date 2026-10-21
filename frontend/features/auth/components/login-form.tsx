@@ -1,15 +1,21 @@
 "use client";
 
-import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
+import { ArrowRight, CheckCircle2, LockKeyhole, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { login, storeAuthenticatedAdmin } from "../api";
+import { login, storeAuthenticatedSession } from "../api";
 import { AuthFormField } from "./auth-form-field";
 import { AuthPageShell } from "./auth-page-shell";
 
-export function LoginForm() {
+export function LoginForm({
+  sessionExpired = false,
+  registrationSuccessful = false,
+}: {
+  sessionExpired?: boolean;
+  registrationSuccessful?: boolean;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,8 +35,8 @@ export function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const admin = await login({ email: normalizedEmail, password });
-      storeAuthenticatedAdmin(admin);
+      const session = await login({ email: normalizedEmail, password });
+      storeAuthenticatedSession(session);
       router.replace("/dashboard");
     } catch (loginError) {
       setError(
@@ -45,10 +51,20 @@ export function LoginForm() {
 
   return (
     <AuthPageShell
+      variant="hero"
       title="Administrator sign in"
       description="Use your administrator account to manage sitemap pages."
       footer={
         <div className="mt-6 space-y-2 text-center text-sm text-slate-500">
+          <p>
+            Need an administrator account?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-blue-700 hover:text-blue-900"
+            >
+              Create account
+            </Link>
+          </p>
           <p>
             Need to find a screen?{" "}
             <Link
@@ -62,6 +78,23 @@ export function LoginForm() {
       }
     >
       <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+        {registrationSuccessful ? (
+          <p
+            role="status"
+            className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm font-medium text-emerald-700"
+          >
+            <CheckCircle2 className="size-4.5 shrink-0" aria-hidden="true" />
+            Account created successfully. You can now sign in.
+          </p>
+        ) : null}
+        {sessionExpired ? (
+          <p
+            role="status"
+            className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm font-medium text-amber-800"
+          >
+            Your session expired. Please sign in again.
+          </p>
+        ) : null}
         <AuthFormField
           id="email"
           label="Email address"
@@ -99,7 +132,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition hover:from-blue-600 hover:to-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-br from-sky-400 via-blue-500 to-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/35 transition hover:from-sky-300 hover:to-blue-700 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-blue-300 disabled:cursor-wait disabled:opacity-70"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
           {!isSubmitting ? (
