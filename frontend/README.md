@@ -41,7 +41,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - Create, view, edit, and delete dialogs
 - Loading, empty, success, and error states
 - Administrator login, public registration, protected dashboard access,
-  automatic session-expiry logout, and sign out
+  account approval, automatic session-expiry logout, and sign out
 
 ## Project map
 
@@ -52,12 +52,14 @@ app/
 ├── login/page.tsx             # Administrator sign-in at /login
 ├── register/page.tsx          # Public administrator registration at /register
 ├── dashboard/page.tsx         # Protected sitemap overview at /dashboard
+├── account-permissions/page.tsx # Protected account approvals
 ├── activity-logs/page.tsx     # Protected audit history at /activity-logs
 └── sitemap/page.tsx           # Protected sitemap administration at /sitemap
 components/
 └── layout/
     └── sidebar.tsx            # Shared desktop and mobile navigation
 features/
+├── accounts/                  # Account approval API and UI
 ├── auth/                      # Authentication API, types, hooks, and forms
 ├── activity-logs/             # Audit history API, state, types, and UI
 ├── dashboard/                 # Overview metrics and dashboard UI

@@ -117,7 +117,7 @@ def authenticate_admin(email: str, password: str, db: Session) -> AdminUser | No
         verify_password(password, DUMMY_PASSWORD_HASH)
         return None
 
-    if not verify_password(password, admin.password_hash) or not admin.is_active:
+    if not verify_password(password, admin.password_hash):
         return None
     return admin
 
@@ -160,6 +160,8 @@ def bootstrap_admin(db: Session, settings: Settings) -> AdminUser | None:
         email=email,
         full_name=settings.admin_name.strip(),
         password_hash=hash_password(settings.admin_password),
+        is_active=True,
+        approval_status="approved",
     )
     db.add(admin)
     db.commit()
@@ -196,6 +198,16 @@ def get_current_session(
     admin = db.get(AdminUser, claims.admin_id)
     if admin is None:
         raise authentication_error("invalid_session", "Invalid session")
+    if admin.approval_status == "pending":
+        raise authentication_error(
+            "account_pending",
+            "Your account is waiting for administrator approval",
+        )
+    if admin.approval_status == "rejected":
+        raise authentication_error(
+            "account_rejected",
+            "Your account registration was rejected",
+        )
     if not admin.is_active:
         raise authentication_error("inactive_account", "Account is inactive")
     return AuthenticatedSession(admin=admin, expires_at=claims.expires_at)

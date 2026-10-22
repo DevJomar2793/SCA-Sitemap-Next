@@ -79,6 +79,9 @@ when the application starts against a new database.
 | `DELETE` | `/api/v1/delete-admin-page/{id}` | Delete a page |
 | `POST` | `/api/v1/import-sitemap-pages` | Replace pages from an Excel workbook |
 | `GET` | `/api/v1/activity-logs` | Search immutable administrative history |
+| `GET` | `/api/v1/accounts` | List registered administrator accounts |
+| `PATCH` | `/api/v1/accounts/{id}/approve` | Approve a pending account |
+| `PATCH` | `/api/v1/accounts/{id}/reject` | Permanently reject a pending account |
 
 These dashboard endpoints require an authenticated administrator. The public
 `GET /api/v1/search-sitemap-pages?q={identifier}` endpoint remains available
@@ -108,8 +111,9 @@ reach the screen. The API field name is retained for compatibility.
 
 ## Activity logs
 
-Successful administrator sign-ins, sign-outs, registrations, sitemap Add,
-Update, Delete, and Excel import operations create immutable activity records.
+Successful administrator sign-ins, sign-outs, registrations, approvals,
+rejections, sitemap Add, Update, Delete, and Excel import operations create
+immutable activity records.
 Each entry retains the administrator's ID, name, and email as they appeared at
 the time of the action, plus the affected record, field-level details, and UTC
 timestamp. Registration, sitemap changes, and imports save their audit entry in
@@ -121,10 +125,11 @@ summary instead of one entry per imported row.
 
 `GET /api/v1/activity-logs` supports `q`, `user_id`, `action`, `module`,
 `date_from`, `date_to`, `page`, and `page_size`. Supported actions are `ADD`,
-`UPDATE`, `DELETE`, `LOGIN`, `LOGOUT`, `REGISTER`, and `IMPORT`. `date_from` is
-inclusive and `date_to` is exclusive. Results are ordered newest first and
-include user, action, and module filter options plus pagination totals. There
-are no endpoints for modifying or deleting activity history.
+`UPDATE`, `DELETE`, `LOGIN`, `LOGOUT`, `REGISTER`, `IMPORT`, `APPROVE`, and
+`REJECT`. `date_from` is inclusive and `date_to` is exclusive. Results are
+ordered newest first and include user, action, and module filter options plus
+pagination totals. There are no endpoints for modifying or deleting activity
+history.
 
 ## Excel import
 
@@ -206,10 +211,11 @@ curl -H "Content-Type: application/json" \
   http://localhost:8000/api/v1/auth/register
 ```
 
-Registration returns an active account but does not create a session. The new
-administrator signs in after registration. Emails are case-insensitive,
-passwords must contain 5–128 characters, and an existing email returns
-`409 Conflict`.
+The first registered account is approved automatically. Later registrations
+remain pending until an approved administrator accepts them from Account
+Permissions. Rejected registrations are permanent. Registration does not
+create a session. Emails are case-insensitive, passwords must contain 5–128
+characters, and an existing email returns `409 Conflict`.
 
 Log out when finished:
 

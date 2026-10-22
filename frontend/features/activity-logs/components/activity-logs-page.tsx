@@ -36,6 +36,7 @@ const FIELD_LABELS: Record<string, string> = {
   full_name: "Full name",
   email: "Email address",
   is_active: "Active account",
+  approval_status: "Approval status",
   imported_count: "Imported pages",
   replaced_count: "Replaced pages",
   skipped_count: "Skipped rows",
@@ -50,6 +51,8 @@ const ACTION_LABELS: Record<ActivityAction, string> = {
   LOGOUT: "Signed out",
   REGISTER: "Registered",
   IMPORT: "Imported",
+  APPROVE: "Approved",
+  REJECT: "Rejected",
 };
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en-PH", {
@@ -73,14 +76,19 @@ export function ActivityLogsPage({ admin }: { admin: AdminUser }) {
   }
 
   return (
-    <AdminShell admin={admin} title="Activity Logs" section="Audit History">
+    <AdminShell
+      admin={admin}
+      title="Activity Logs"
+      section="Audit History"
+      appearance="finder"
+    >
       <div className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-7">
         <div className="mb-6">
-          <p className="text-sm font-semibold text-blue-600">System history</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-slate-950">
+          <p className="text-sm font-semibold text-sky-300">System history</p>
+          <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-white">
             Review administrative activity
           </h2>
-          <p className="mt-1.5 text-sm leading-6 text-slate-500">
+          <p className="mt-1.5 text-sm leading-6 text-blue-100">
             See who performed each action, which records were affected, and
             what changed.
           </p>
@@ -101,7 +109,7 @@ export function ActivityLogsPage({ admin }: { admin: AdminUser }) {
         {logs.error ? (
           <ActivityError message={logs.error} onRetry={logs.retry} />
         ) : (
-          <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <section className="mt-5 overflow-hidden rounded-2xl border border-blue-200/80 bg-white shadow-[0_18px_45px_rgba(0,13,45,0.2)]">
             {logs.isLoading ? (
               <ActivitySkeleton />
             ) : logs.data.items.length === 0 ? (
@@ -160,7 +168,7 @@ function ActivityToolbar({
   onClear: () => void;
 }) {
   return (
-    <section aria-label="Activity log filters" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section aria-label="Activity log filters" className="rounded-2xl border border-blue-200/80 bg-white p-4 shadow-[0_18px_45px_rgba(0,13,45,0.2)] sm:p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <label className="relative block min-w-0 flex-1">
           <span className="sr-only">Search activity logs</span>
@@ -355,6 +363,8 @@ const actionClasses: Record<ActivityAction, string> = {
   LOGOUT: "bg-slate-100 text-slate-700 ring-slate-200",
   REGISTER: "bg-violet-50 text-violet-700 ring-violet-200",
   IMPORT: "bg-cyan-50 text-cyan-700 ring-cyan-200",
+  APPROVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  REJECT: "bg-red-50 text-red-700 ring-red-200",
 };
 
 function ActionBadge({ action }: { action: ActivityAction }) {

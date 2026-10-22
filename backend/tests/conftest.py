@@ -48,6 +48,8 @@ def client(database_engine) -> Generator[TestClient, None, None]:
                 email=TEST_ADMIN_EMAIL,
                 full_name=TEST_ADMIN_NAME,
                 password_hash=hash_password(TEST_ADMIN_PASSWORD),
+                is_active=True,
+                approval_status="approved",
             )
         )
         db.commit()

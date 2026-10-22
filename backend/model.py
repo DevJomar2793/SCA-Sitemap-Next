@@ -49,8 +49,14 @@ class AdminUser(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
-        default=True,
-        server_default="1",
+        default=False,
+        server_default="false",
+    )
+    approval_status: Mapped[str] = mapped_column(
+        String(16),
+        nullable=False,
+        default="pending",
+        server_default="pending",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

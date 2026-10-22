@@ -51,6 +51,24 @@ def login(
             "incorrect_credentials",
             "Incorrect email or password",
         )
+    if admin.approval_status == "pending":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "account_pending",
+                "message": "Your account is waiting for administrator approval",
+            },
+        )
+    if admin.approval_status == "rejected":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "account_rejected",
+                "message": "Your account registration was rejected",
+            },
+        )
+    if not admin.is_active:
+        raise authentication_error("inactive_account", "Account is inactive")
 
     session_token = create_session_token(admin, settings)
     add_activity_log(

@@ -40,12 +40,12 @@ export function RegisterForm() {
     setIsSubmitting(true);
 
     try {
-      await register({
+      const createdAccount = await register({
         full_name: normalizedName,
         email: normalizedEmail,
         password,
       });
-      router.replace("/login?registered=1");
+      router.replace(`/login?registered=${createdAccount.approval_status}`);
     } catch (registrationError) {
       setError(
         registrationError instanceof Error

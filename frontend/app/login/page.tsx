@@ -13,10 +13,14 @@ export default async function LoginPage({
   searchParams: Promise<{ reason?: string; registered?: string }>;
 }) {
   const { reason, registered } = await searchParams;
+  const registrationStatus =
+    registered === "approved" || registered === "pending"
+      ? registered
+      : undefined;
   return (
     <LoginForm
       sessionExpired={reason === "expired"}
-      registrationSuccessful={registered === "1"}
+      registrationStatus={registrationStatus}
     />
   );
 }

@@ -5,7 +5,9 @@ export type ActivityAction =
   | "LOGIN"
   | "LOGOUT"
   | "REGISTER"
-  | "IMPORT";
+  | "IMPORT"
+  | "APPROVE"
+  | "REJECT";
 
 export type ActivityActor = {
   id: number;

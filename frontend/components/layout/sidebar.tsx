@@ -8,6 +8,7 @@ import {
   LogOut,
   Map,
   Search,
+  UserCog,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +26,7 @@ type SidebarProps = {
 };
 
 const secondaryNavigation = [
+  { label: "Account Permissions", icon: UserCog, href: "/account-permissions" },
   { label: "Activity Logs", icon: FileClock, href: "/activity-logs" },
 ];
 
