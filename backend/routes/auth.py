@@ -69,7 +69,7 @@ def login(
         max_age=settings.auth_session_minutes * 60,
         httponly=True,
         secure=settings.auth_cookie_secure,
-        samesite="lax",
+        samesite="none" if settings.auth_cookie_secure else "lax",
         path="/",
     )
     return {
@@ -140,7 +140,7 @@ def logout(
         path="/",
         secure=settings.auth_cookie_secure,
         httponly=True,
-        samesite="lax",
+        samesite="none" if settings.auth_cookie_secure else "lax",
     )
     response.status_code = status.HTTP_204_NO_CONTENT
     return response
