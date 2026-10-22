@@ -237,6 +237,7 @@ export function SitemapDashboard({ admin }: SitemapDashboardProps) {
           key={`${modal.mode}-${modal.page?.id ?? "new"}`}
           mode={modal.mode}
           page={modal.page}
+          existingPages={pages}
           onClose={() => setModal(null)}
           onSubmit={submitModal}
         />

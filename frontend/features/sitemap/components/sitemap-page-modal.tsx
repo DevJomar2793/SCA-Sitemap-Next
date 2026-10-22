@@ -1,7 +1,12 @@
 "use client";
 
 import { Loader2, Pencil, Plus, X } from "lucide-react";
-import { useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 
 import { useAnimatedDialog } from "../hooks/use-animated-dialog";
 import { useDialogKeyboard } from "../hooks/use-dialog-keyboard";
@@ -13,10 +18,12 @@ import {
   type SitemapPageInput,
   type SitemapPageWriteInput,
 } from "../types";
+import { getNextScreenNumber } from "../utils";
 
 type SitemapPageModalProps = {
   mode: SitemapFormMode;
   page?: SitemapPage;
+  existingPages: SitemapPage[];
   onClose: () => void;
   onSubmit: (values: SitemapPageWriteInput) => Promise<void>;
 };
@@ -89,6 +96,7 @@ function formatDate(value: string): string {
 export function SitemapPageModal({
   mode,
   page,
+  existingPages,
   onClose,
   onSubmit,
 }: SitemapPageModalProps) {
@@ -101,6 +109,7 @@ export function SitemapPageModal({
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const screenNumberWasEdited = useRef(false);
   const isReadOnly = mode === "view";
   const { completeClose, isClosing, requestClose } = useAnimatedDialog(
     onClose,
@@ -109,16 +118,50 @@ export function SitemapPageModal({
 
   useDialogKeyboard(dialogRef, requestClose);
 
-  function updateField(name: keyof SitemapPageInput, value: string) {
+  useEffect(() => {
+    if (mode !== "create" || screenNumberWasEdited.current) {
+      return;
+    }
+
     setValues((current) => {
-      const nextValues = {
-        ...current,
-        [name]:
-          name === "alpha" ? value.replace(/\d/g, "").toUpperCase() : value,
-      };
+      const screenNumber = getNextScreenNumber(existingPages, current.alpha);
+      if (screenNumber === current.screen_number) {
+        return current;
+      }
+
+      const nextValues = { ...current, screen_number: screenNumber };
       return { ...nextValues, ...generateLabels(nextValues) };
     });
-    setErrors((current) => ({ ...current, [name]: undefined }));
+  }, [existingPages, mode]);
+
+  function updateField(name: keyof SitemapPageInput, value: string) {
+    setValues((current) => {
+      const normalizedValue =
+        name === "alpha" ? value.replace(/\d/g, "").toUpperCase() : value;
+      const nextValues = {
+        ...current,
+        [name]: normalizedValue,
+      };
+
+      if (mode === "create" && name === "alpha") {
+        screenNumberWasEdited.current = false;
+        nextValues.screen_number = getNextScreenNumber(
+          existingPages,
+          normalizedValue,
+        );
+      } else if (mode === "create" && name === "screen_number") {
+        screenNumberWasEdited.current = true;
+      }
+
+      return { ...nextValues, ...generateLabels(nextValues) };
+    });
+    setErrors((current) => ({
+      ...current,
+      [name]: undefined,
+      ...(mode === "create" && name === "alpha"
+        ? { screen_number: undefined }
+        : {}),
+    }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
