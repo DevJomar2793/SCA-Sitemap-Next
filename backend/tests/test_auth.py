@@ -9,12 +9,14 @@ from sqlalchemy.orm import Session
 from config import Settings
 from database import get_db
 from model import AdminUser
+from schema import AdminRegister
 from security import (
     AUTH_COOKIE_NAME,
     JWT_ALGORITHM,
     bootstrap_admin,
     verify_password,
 )
+from services.admin_users import register_admin
 from conftest import (
     TEST_ADMIN_EMAIL,
     TEST_ADMIN_NAME,
@@ -50,7 +52,9 @@ def test_login_sets_http_only_session_cookie(client: TestClient) -> None:
         "id": 1,
         "email": TEST_ADMIN_EMAIL,
         "full_name": TEST_ADMIN_NAME,
+        "role": "admin",
         "is_active": True,
+        "approval_status": "approved",
         "created_at": response.json()["created_at"],
         "expires_at": response.json()["expires_at"],
     }
@@ -72,7 +76,7 @@ def test_login_sets_http_only_session_cookie(client: TestClient) -> None:
     assert session_response.json() == response.json()
 
 
-def test_authenticated_admin_can_register_another_admin(
+def test_authenticated_admin_registration_is_pending(
     client: TestClient,
 ) -> None:
     creator = client.get(PROTECTED_PATH).json()
@@ -92,7 +96,9 @@ def test_authenticated_admin_can_register_another_admin(
         "id": 2,
         "email": "second.admin@example.com",
         "full_name": "Second Administrator",
-        "is_active": True,
+        "role": "admin",
+        "is_active": False,
+        "approval_status": "pending",
         "created_at": response.json()["created_at"],
     }
     assert "password" not in response.text
@@ -124,8 +130,8 @@ def test_authenticated_admin_can_register_another_admin(
         email="second.admin@example.com",
         password="another-secure-password",
     )
-    assert login_response.status_code == 200
-    assert login_response.json()["id"] == 2
+    assert login_response.status_code == 403
+    assert login_response.json()["detail"]["code"] == "account_pending"
 
 
 def test_register_rejects_duplicate_email_case_insensitively(
@@ -203,12 +209,29 @@ def test_unauthenticated_admin_can_register(
         "id": 2,
         "email": "new@example.com",
         "full_name": "New Administrator",
-        "is_active": True,
+        "role": "admin",
+        "is_active": False,
+        "approval_status": "pending",
         "created_at": response.json()["created_at"],
     }
     assert "password" not in response.text
     assert "set-cookie" not in response.headers
     assert AUTH_COOKIE_NAME not in client.cookies
+
+
+def test_first_registered_account_is_approved(database_engine) -> None:
+    with Session(database_engine) as db:
+        created = register_admin(
+            db,
+            AdminRegister(
+                email="first@example.com",
+                full_name="First Administrator",
+                password="secure-password",
+            ),
+        )
+
+        assert created.approval_status == "approved"
+        assert created.is_active is True
 
 
 @pytest.mark.parametrize(
@@ -319,6 +342,8 @@ def test_legacy_current_admin_endpoint_remains_removed(client: TestClient) -> No
         ("patch", "/api/v1/update-admin-page/1"),
         ("delete", "/api/v1/delete-admin-page/1"),
         ("post", "/api/v1/import-sitemap-pages"),
+        ("patch", "/api/v1/accounts/2/approve"),
+        ("patch", "/api/v1/accounts/2/reject"),
     ],
 )
 def test_dashboard_apis_require_authentication(
@@ -384,6 +409,8 @@ def test_bootstrap_creates_hashed_admin_once(database_engine) -> None:
         assert created.email == TEST_ADMIN_EMAIL
         assert created.password_hash != TEST_ADMIN_PASSWORD
         assert verify_password(TEST_ADMIN_PASSWORD, created.password_hash)
+        assert created.approval_status == "approved"
+        assert created.is_active is True
 
         assert bootstrap_admin(db, settings) is None
         assert len(list(db.scalars(select(AdminUser)))) == 1

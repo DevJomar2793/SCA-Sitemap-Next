@@ -1,6 +1,12 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, LockKeyhole, Mail } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  LockKeyhole,
+  Mail,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -11,10 +17,10 @@ import { AuthPageShell } from "./auth-page-shell";
 
 export function LoginForm({
   sessionExpired = false,
-  registrationSuccessful = false,
+  registrationStatus,
 }: {
   sessionExpired?: boolean;
-  registrationSuccessful?: boolean;
+  registrationStatus?: "approved" | "pending";
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -78,13 +84,22 @@ export function LoginForm({
       }
     >
       <form onSubmit={handleSubmit} className="mt-7 space-y-5">
-        {registrationSuccessful ? (
+        {registrationStatus === "approved" ? (
           <p
             role="status"
             className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm font-medium text-emerald-700"
           >
             <CheckCircle2 className="size-4.5 shrink-0" aria-hidden="true" />
             Account created successfully. You can now sign in.
+          </p>
+        ) : null}
+        {registrationStatus === "pending" ? (
+          <p
+            role="status"
+            className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm font-medium text-amber-800"
+          >
+            <Clock3 className="size-4.5 shrink-0" aria-hidden="true" />
+            Account created and waiting for administrator approval.
           </p>
         ) : null}
         {sessionExpired ? (

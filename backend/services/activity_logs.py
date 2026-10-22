@@ -17,6 +17,8 @@ ActivityAction = Literal[
     "LOGOUT",
     "REGISTER",
     "IMPORT",
+    "APPROVE",
+    "REJECT",
 ]
 SITEMAP_MODULE = "Sitemap"
 AUTHENTICATION_MODULE = "Authentication"

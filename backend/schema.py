@@ -12,7 +12,10 @@ ActivityAction = Literal[
     "LOGOUT",
     "REGISTER",
     "IMPORT",
+    "APPROVE",
+    "REJECT",
 ]
+ApprovalStatus = Literal["pending", "approved", "rejected"]
 
 
 def reject_generated_label_fields(value: Any) -> Any:
@@ -110,7 +113,9 @@ class AdminUserRead(BaseModel):
     id: int
     email: EmailStr
     full_name: str
+    role: Literal["admin"] = "admin"
     is_active: bool
+    approval_status: ApprovalStatus
     created_at: datetime
 
 

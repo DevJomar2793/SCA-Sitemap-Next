@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import Settings
 from database import SessionLocal, init_db
+from routes.accounts import router as accounts_router
 from routes.activity_logs import router as activity_logs_router
 from routes.admin_pages import router as admin_pages_router
 from routes.auth import router as auth_router
@@ -57,6 +58,7 @@ def create_app(
     api_router.include_router(auth_router)
     api_router.include_router(admin_pages_router)
     api_router.include_router(activity_logs_router)
+    api_router.include_router(accounts_router)
     application.include_router(api_router)
     return application
 

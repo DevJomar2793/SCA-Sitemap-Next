@@ -1,7 +1,9 @@
 import pytest
+from sqlalchemy import inspect, text
 
+import database
 from config import Settings
-from database import build_database_url
+from database import build_database_url, upgrade_admin_user_schema
 
 
 def database_settings(**overrides: str | None) -> Settings:
@@ -39,3 +41,44 @@ def test_build_database_url_rejects_invalid_parameters(
 ) -> None:
     with pytest.raises(RuntimeError, match=message):
         build_database_url(database_settings(**overrides))
+
+
+def test_admin_upgrade_preserves_existing_account_access(
+    database_engine,
+    monkeypatch,
+) -> None:
+    with database_engine.begin() as connection:
+        connection.execute(
+            text("ALTER TABLE admin_users DROP COLUMN approval_status")
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO admin_users
+                    (email, full_name, password_hash, is_active)
+                VALUES
+                    ('active@example.com', 'Active Admin', 'hash', true),
+                    ('inactive@example.com', 'Inactive Admin', 'hash', false)
+                """
+            )
+        )
+
+    monkeypatch.setattr(database, "engine", database_engine)
+    upgrade_admin_user_schema()
+
+    columns = {
+        column["name"]: column
+        for column in inspect(database_engine).get_columns("admin_users")
+    }
+    assert columns["approval_status"]["nullable"] is False
+
+    with database_engine.connect() as connection:
+        rows = connection.execute(
+            text(
+                "SELECT email, approval_status FROM admin_users ORDER BY email"
+            )
+        ).all()
+    assert [tuple(row) for row in rows] == [
+        ("active@example.com", "approved"),
+        ("inactive@example.com", "rejected"),
+    ]

@@ -69,7 +69,46 @@ def init_db() -> None:
     import model  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    upgrade_admin_user_schema()
     upgrade_activity_log_schema()
+
+
+def upgrade_admin_user_schema() -> None:
+    """Add account approval status without losing existing administrators."""
+    inspector = inspect(engine)
+    if "admin_users" not in inspector.get_table_names():
+        return
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE admin_users "
+                "ADD COLUMN IF NOT EXISTS approval_status VARCHAR(16)"
+            )
+        )
+        connection.execute(
+            text(
+                """
+                UPDATE admin_users
+                SET approval_status = CASE
+                    WHEN is_active THEN 'approved'
+                    ELSE 'rejected'
+                END
+                WHERE approval_status IS NULL
+                """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE admin_users ALTER COLUMN approval_status "
+                "SET DEFAULT 'pending'"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE admin_users ALTER COLUMN approval_status SET NOT NULL"
+            )
+        )
 
 
 def upgrade_activity_log_schema() -> None:

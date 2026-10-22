@@ -2,7 +2,9 @@ export type AdminUser = {
   id: number;
   email: string;
   full_name: string;
+  role: "admin";
   is_active: boolean;
+  approval_status: "pending" | "approved" | "rejected";
   created_at: string;
 };
 
