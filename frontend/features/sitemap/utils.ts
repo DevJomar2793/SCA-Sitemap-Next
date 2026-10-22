@@ -30,6 +30,48 @@ export function getPaginationItems(
   return items;
 }
 
+export function getNextScreenNumber(
+  pages: SitemapPage[],
+  alpha: string,
+): string {
+  const normalizedAlpha = alpha.trim().toUpperCase();
+  if (!normalizedAlpha) {
+    return "";
+  }
+
+  let highestNumber = -1;
+  let numberWidth = 2;
+
+  pages.forEach((page) => {
+    if (page.alpha.trim().toUpperCase() !== normalizedAlpha) {
+      return;
+    }
+
+    const screenNumber = page.screen_number.trim();
+    if (!/^\d+$/.test(screenNumber)) {
+      return;
+    }
+
+    const numericValue = Number.parseInt(screenNumber, 10);
+    if (!Number.isSafeInteger(numericValue)) {
+      return;
+    }
+
+    if (numericValue > highestNumber) {
+      highestNumber = numericValue;
+      numberWidth = screenNumber.length;
+    } else if (numericValue === highestNumber) {
+      numberWidth = Math.max(numberWidth, screenNumber.length);
+    }
+  });
+
+  if (highestNumber < 0) {
+    return "01";
+  }
+
+  return String(highestNumber + 1).padStart(numberWidth, "0");
+}
+
 function escapeCsv(value: string | number): string {
   return `"${String(value).replaceAll('"', '""')}"`;
 }
